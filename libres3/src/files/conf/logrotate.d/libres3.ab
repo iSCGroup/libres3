@@ -1,0 +1,14 @@
+$(localstatedir)/log/libres3/access.log $(localstatedir)/log/libres3/errors.log $(localstatedir)/log/libres3/warnings.log {
+        daily
+        missingok
+        rotate 7
+        compress
+	delaycompress
+        notifempty
+	create 0640
+        sharedscripts
+	postrotate
+		[ ! -f $(localstatedir)/run/libres3/libres3.pid ] || kill -USR1 `cat $(localstatedir)/run/libres3/libres3.pid`
+	endscript
+}
+

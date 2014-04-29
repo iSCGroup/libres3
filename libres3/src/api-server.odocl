@@ -1,0 +1,15 @@
+# OASIS_START
+# DO NOT EDIT (digest: 8411523f00899578b10df054832151fb)
+server/Paths
+server/Cmdline
+server/Dispatch
+server/Bucket
+server/ServiceOps
+server/BucketOps
+server/ObjectOps
+server/Error
+server/CodedIO
+server/CanonRequest
+server/Cryptoutil
+server/Util
+# OASIS_STOP

@@ -1,0 +1,26 @@
+# OASIS_START
+# DO NOT EDIT (digest: 63cc39f68c681144d83ffd81399dc187)
+OUnitUtils
+OUnitPropList
+OUnitPlugin
+OUnitChooser
+OUnitResultSummary
+OUnitLoggerStd
+OUnitLoggerHTML
+OUnitLoggerHTMLData
+OUnitLoggerJUnit
+OUnitAssert
+OUnitBracket
+OUnitTest
+OUnitState
+OUnitRunner
+OUnitRunnerProcesses
+OUnitCore
+OUnitLogger
+OUnitConf
+OUnitShared
+OUnitCache
+OUnitTestData
+OUnitCheckEnv
+OUnitDiff
+# OASIS_STOP

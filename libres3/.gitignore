@@ -1,0 +1,17 @@
+setup.log
+setup.data
+*.native
+reply.log
+src/files/sbin/libres3_env.sh
+src/files/sbin/libres3
+src/files/conf/libres3.conf
+src/files/conf/libres3-nginx.conf
+src/files/conf/libres3.sample.s3cfg
+src/files/conf/libres3-insecure.sample.s3cfg
+src/files/conf/logrotate.d/libres3
+src/server/configure.ml
+*.cmp
+metrics.html
+bisect*.out
+coverage.html/
+README.txt

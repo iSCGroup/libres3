@@ -1,0 +1,18 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Uutf" rel="Chapter" href="Uutf.html"><title>Uutf.String</title>
+</head>
+<body>
+<code class="code"><span class="keyword">sig</span><br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;encoding_guess&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;[&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_16BE</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_16LE</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_8</span>&nbsp;]&nbsp;*&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;folder&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;[&nbsp;<span class="keywordsign">`</span><span class="constructor">Malformed</span>&nbsp;<span class="keyword">of</span>&nbsp;string&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Uchar</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Uutf</span>.uchar&nbsp;]&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fold_utf_8&nbsp;:&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">String</span>.folder&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fold_utf_16be&nbsp;:&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">String</span>.folder&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fold_utf_16le&nbsp;:&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">String</span>.folder&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
+<span class="keyword">end</span></code></body></html>

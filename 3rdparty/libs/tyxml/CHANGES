@@ -1,0 +1,53 @@
+===== 3.0.0 ====
+
+  * In the functorial interface, allow to wrap xml nodes inside a monad by providing an additionnal wrapping module. Used by reactive nodes in eliom.
+  * Use oasis as build systems
+  * Various bug fixes, mostly related to the svg module.
+
+===== 2.3.0 =====
+
+  * Adding module Unsafe for inserting missing nodes or attributes
+
+===== 2.2.0 =====
+
+  * Adding tag <u>
+
+===== 2.1.0 =====
+
+ * Rename all module names lower-case
+ * Explicit choice of implementation for syntax extension
+
+===== 2.0.2 =====
+
+ * Add a simple printer: XML.print
+ * API change:
+ ** Rename XML.event into XML.event_handler
+ ** The functorized interface now export the concrete representation of XML.nodes
+ ** Open types in SVG_sigs (closes #269).
+
+===== 2.0.1 =====
+
+ * Allow compilation on win32/msvc
+ * Truly allow to abstract the XMl.uri representation
+ * Always print XHTML in a format that is "Html compatible":
+ ** Add missing namespace in <html>.
+
+===== 2.0 =====
+
+ * Allow the namespace attribute in HTML5 elements.
+ * Always print polyglot XML. ( document correct as HTML5 and as XML )
+ * Add new polymorphic types to HTML5 ( between_phrasing_and_phrasing_without_interactive, ... )
+
+===== 2.0-rc1 =====
+
+ * Some fixes to match the latest HTML5 working draft (05/08/2011).
+ * Simplification of the functorial interface (use module substitution)
+ * Fix IFrame usage.
+
+===== 1.91 =====
+
+ * First independant release (was released with ocsigen)
+ * Add a functorial interface for concrete XML representation
+ * Add a functorial interface for stream printer
+ * Rename XHTML5 into HTML5
+ * Change the default syntax to HTML5 instead of XHTML 1.1

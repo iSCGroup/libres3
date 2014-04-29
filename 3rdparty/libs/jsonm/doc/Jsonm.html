@@ -1,0 +1,447 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Jsonm" rel="Chapter" href="Jsonm.html"><link title="JSON data model" rel="Section" href="#datamodel">
+<link title="Decode" rel="Section" href="#decode">
+<link title="Encode" rel="Section" href="#encode">
+<link title="Manual sources and destinations" rel="Section" href="#manual">
+<link title="Uncut codec" rel="Section" href="#uncut">
+<link title="Limitations" rel="Section" href="#limitations">
+<link title="Error recovery" rel="Section" href="#errorrecovery">
+<link title="Examples" rel="Section" href="#examples">
+<link title="Decode" rel="Subsection" href="#2_Decode">
+<link title="Encode" rel="Subsection" href="#2_Encode">
+<link title="Trip" rel="Subsection" href="#filter">
+<link title="Member selection" rel="Subsection" href="#memsel">
+<link title="Generic JSON representation" rel="Subsection" href="#tree">
+<title>Jsonm</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_Jsonm.html">Jsonm</a></h1>
+<pre><span class="keyword">module</span> Jsonm: <code class="code"><span class="keyword">sig</span></code> <a href="Jsonm.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>Non-blocking streaming JSON codec. 
+<p>
+
+    <code class="code"><span class="constructor">Jsonm</span></code> is a non-blocking streaming codec to
+    <a href="Jsonm.html#decode">decode</a> and <a href="Jsonm.html#encode">encode</a> the
+    <a href="http://tools.ietf.org/html/rfc4627">JSON</a> data format. It can
+    process JSON text without blocking on IO and without a complete
+    in-memory representation of the data.
+<p>
+
+    The <a href="Jsonm.Uncut.html">uncut codec</a> also processes whitespace and
+    (non-standard) JSON with JavaScript comments.
+<p>
+
+    Consult the <a href="Jsonm.html#datamodel">data model</a>, <a href="Jsonm.html#limitations">limitations</a>
+    and <a href="Jsonm.html#examples">examples</a> of use.
+<p>
+
+    <em>Version 0.9.1 - Daniel Bünzli &lt;daniel.buenzli at erratique.ch&gt; </em>
+    <span id="3_References"><h3>References</h3></span>
+    <ul>
+<li>D. Crockford
+    <em><a href="http://tools.ietf.org/html/rfc4627">JSON The application/json Media 
+    Type for JavaScript Object Notation (JSON)</a></em>, 2006.</li>
+</ul>
+<br>
+<hr width="100%">
+<br>
+<span id="datamodel"><h1>JSON data model</h1></span><br>
+<pre><span id="TYPElexeme"><span class="keyword">type</span> <code class="type"></code>lexeme</span> = <code class="type">[ `Ae<br>       | `As<br>       | `Bool of bool<br>       | `Float of float<br>       | `Name of string<br>       | `Null<br>       | `Oe<br>       | `Os<br>       | `String of string ]</code> </pre>
+<div class="info">
+The type for JSON lexemes. <code class="code"><span class="keywordsign">`</span><span class="constructor">As</span></code> and <code class="code"><span class="keywordsign">`</span><span class="constructor">Ae</span></code> 
+    start and end arrays and <code class="code"><span class="keywordsign">`</span><span class="constructor">Os</span></code> and <code class="code"><span class="keywordsign">`</span><span class="constructor">Oe</span></code> start
+    and end objects. <code class="code"><span class="keywordsign">`</span><span class="constructor">Name</span></code> is for the member names of objects. 
+<p>
+
+    A <em>well-formed</em> sequence of lexemes belongs to the language of
+    the <code class="code">json</code> grammar:
+<code class="code">&nbsp;&nbsp;json&nbsp;=&nbsp;<span class="keyword">object</span>&nbsp;/&nbsp;array<br>
+<span class="keyword">object</span>&nbsp;=&nbsp;<span class="keywordsign">`</span><span class="constructor">Os</span>&nbsp;*member&nbsp;<span class="keywordsign">`</span><span class="constructor">Oe</span><br>
+member&nbsp;=&nbsp;(<span class="keywordsign">`</span><span class="constructor">Name</span>&nbsp;s)&nbsp;value&nbsp;<br>
+&nbsp;array&nbsp;=&nbsp;<span class="keywordsign">`</span><span class="constructor">As</span>&nbsp;*value&nbsp;<span class="keywordsign">`</span><span class="constructor">Ae</span><br>
+&nbsp;value&nbsp;=&nbsp;<span class="keywordsign">`</span><span class="constructor">Null</span>&nbsp;/&nbsp;<span class="keywordsign">`</span><span class="constructor">Bool</span>&nbsp;b&nbsp;/&nbsp;<span class="keywordsign">`</span><span class="constructor">Float</span>&nbsp;f&nbsp;/&nbsp;<span class="keywordsign">`</span><span class="constructor">String</span>&nbsp;s&nbsp;/&nbsp;<span class="keyword">object</span>&nbsp;/&nbsp;array&nbsp;&nbsp;<br>
+</code>
+    A <a href="Jsonm.html#decode">decoder</a> returns only well-formed sequences of
+    lexemes or <code class="code"><span class="keywordsign">`</span><span class="constructor">Error</span></code>s are returned. The
+    <a href="http://tools.ietf.org/html/rfc3629">UTF-8</a>,
+    <a href="http://tools.ietf.org/html/rfc2781">UTF-16</a>, UTF-16LE and
+    UTF-16BE encoding schemes are supported.  The strings of decoded
+    <code class="code"><span class="keywordsign">`</span><span class="constructor">Name</span></code> and <code class="code"><span class="keywordsign">`</span><span class="constructor">String</span></code> lexemes are however always UTF-8 encoded. In
+    these strings, characters originally escaped in the input are in
+    their unescaped representation.
+<p>
+
+    An <a href="Jsonm.html#encode">encoder</a> accepts only well-formed sequences
+    of lexemes or <code class="code"><span class="constructor">Invalid_argument</span></code> is raised. Only the UTF-8
+    encoding scheme is supported. The strings of encoded <code class="code"><span class="keywordsign">`</span><span class="constructor">Name</span></code> and
+    <code class="code"><span class="keywordsign">`</span><span class="constructor">String</span></code> lexemes are assumed to be immutable and must be UTF-8
+    encoded, this is <b>not</b> checked by the module. In these strings,
+    the delimiter characters <code class="code"><span class="constructor">U</span>+0022</code> and <code class="code"><span class="constructor">U</span>+005<span class="constructor">C</span></code> (<code class="code"><span class="string">'"'</span></code>, <code class="code">'\'</code>)
+    aswell as the control characters <code class="code"><span class="constructor">U</span>+0000-<span class="constructor">U</span>+001<span class="constructor">F</span></code> are automatically
+    escaped by the encoders, as mandated by the standard.<br>
+</div>
+
+<pre><span id="VALpp_lexeme"><span class="keyword">val</span> pp_lexeme</span> : <code class="type">Format.formatter -> [< <a href="Jsonm.html#TYPElexeme">lexeme</a> ] -> unit</code></pre><div class="info">
+<code class="code">pp_lexeme ppf l</code> prints a unspecified non-JSON representation of <code class="code">l</code> 
+    on <code class="code">ppf</code>.<br>
+</div>
+<br>
+<span id="decode"><h1>Decode</h1></span><br>
+<pre><span id="TYPEerror"><span class="keyword">type</span> <code class="type"></code>error</span> = <code class="type">[ `Expected of<br>           [ `Aval of bool<br>           | `Comment<br>           | `Eoi<br>           | `Json<br>           | `Name<br>           | `Name_sep<br>           | `Omem of bool<br>           | `Value ]<br>       | `Illegal_BOM<br>       | `Illegal_bytes of string<br>       | `Illegal_escape of<br>           [ `Lone_hi_surrogate of int<br>           | `Lone_lo_surrogate of int<br>           | `Not_esc_uchar of int<br>           | `Not_hex_uchar of int<br>           | `Not_lo_surrogate of int ]<br>       | `Illegal_literal of string<br>       | `Illegal_number of string<br>       | `Illegal_string_uchar of int<br>       | `Unclosed of [ `As | `Comment | `Os | `String ] ]</code> </pre>
+
+<br>
+The type for decoding errors.<br>
+<pre><span id="VALpp_error"><span class="keyword">val</span> pp_error</span> : <code class="type">Format.formatter -> [< <a href="Jsonm.html#TYPEerror">error</a> ] -> unit</code></pre><div class="info">
+<code class="code">pp_error e</code> prints an unspecified UTF-8 representation of <code class="code">e</code> on <code class="code">ppf</code>.<br>
+</div>
+<pre><span id="TYPEencoding"><span class="keyword">type</span> <code class="type"></code>encoding</span> = <code class="type">[ `UTF_16 | `UTF_16BE | `UTF_16LE | `UTF_8 ]</code> </pre>
+<div class="info">
+The type for Unicode encoding schemes.<br>
+</div>
+
+<pre><span id="TYPEsrc"><span class="keyword">type</span> <code class="type"></code>src</span> = <code class="type">[ `Channel of Pervasives.in_channel | `Manual | `String of string ]</code> </pre>
+<div class="info">
+The type for input sources. With a <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> source the client
+    must provide input with <a href="Jsonm.Manual.html#VALsrc"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.src</code></a>.<br>
+</div>
+
+<pre><span id="TYPEdecoder"><span class="keyword">type</span> <code class="type"></code>decoder</span> </pre>
+<div class="info">
+The type for JSON decoders.<br>
+</div>
+
+<pre><span id="VALdecoder"><span class="keyword">val</span> decoder</span> : <code class="type">?encoding:[< <a href="Jsonm.html#TYPEencoding">encoding</a> ] -> [< <a href="Jsonm.html#TYPEsrc">src</a> ] -> <a href="Jsonm.html#TYPEdecoder">decoder</a></code></pre><div class="info">
+<code class="code">decoder encoding src</code> is a JSON decoder that inputs from <code class="code">src</code>.  
+    <code class="code">encoding</code> specifies the character encoding of the data. If unspecified
+    the encoding is guessed as 
+    <a href="http://tools.ietf.org/html/rfc4627#section-3">suggested</a> by
+    the standard.<br>
+</div>
+<pre><span id="VALdecode"><span class="keyword">val</span> decode</span> : <code class="type"><a href="Jsonm.html#TYPEdecoder">decoder</a> -><br>       [> `Await | `End | `Error of <a href="Jsonm.html#TYPEerror">error</a> | `Lexeme of <a href="Jsonm.html#TYPElexeme">lexeme</a> ]</code></pre><div class="info">
+<code class="code">decode d</code> is:
+    <ul>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Await</span></code> if <code class="code">d</code> has a <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> source and awaits for more input. 
+       The client must use <a href="Jsonm.Manual.html#VALsrc"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.src</code></a> to provide it.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Lexeme</span> l</code> if a lexeme <code class="code">l</code> was decoded.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code> if the end of input was reached.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Error</span> e</code> if a decoding error occured. If the client is interested
+       in a best-effort decoding it can still continue to decode 
+       after an error (see <a href="Jsonm.html#errorrecovery"><i>Error recovery</i></a>) although the resulting sequence 
+       of <code class="code"><span class="keywordsign">`</span><span class="constructor">Lexeme</span></code>s is undefined and may not be well-formed.</li>
+</ul>
+
+<p>
+
+    The <a href="Jsonm.Uncut.html#VALpp_decode"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Uncut</span>.pp_decode</code></a> function can be used to inspect decode results.
+<p>
+
+    <b>Note.</b> Repeated invocation always eventually returns <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code>, even 
+    in case of errors.<br>
+</div>
+<pre><span id="VALdecoded_range"><span class="keyword">val</span> decoded_range</span> : <code class="type"><a href="Jsonm.html#TYPEdecoder">decoder</a> -> (int * int) * (int * int)</code></pre><div class="info">
+<code class="code">decoded_range d</code> is the range of characters spanning the last
+    <code class="code"><span class="keywordsign">`</span><span class="constructor">Lexeme</span></code> or <code class="code"><span class="keywordsign">`</span><span class="constructor">Error</span></code> (or <code class="code"><span class="keywordsign">`</span><span class="constructor">White</span></code> or <code class="code"><span class="keywordsign">`</span><span class="constructor">Comment</span></code> for an
+    <a href="Jsonm.Uncut.html#VALdecode"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Uncut</span>.decode</code></a>) decoded by <code class="code">d</code>.  A pair of line and column numbers
+    respectively one and zero based.<br>
+</div>
+<pre><span id="VALdecoder_encoding"><span class="keyword">val</span> decoder_encoding</span> : <code class="type"><a href="Jsonm.html#TYPEdecoder">decoder</a> -> <a href="Jsonm.html#TYPEencoding">encoding</a></code></pre><div class="info">
+<code class="code">decoder_encoding d</code> is <code class="code">d</code>'s encoding.
+<p>
+
+    <b>Warning.</b> If the decoder guesses the encoding, rely on this
+    value only after the first <code class="code"><span class="keywordsign">`</span><span class="constructor">Lexeme</span></code> was decoded.<br>
+</div>
+<pre><span id="VALdecoder_src"><span class="keyword">val</span> decoder_src</span> : <code class="type"><a href="Jsonm.html#TYPEdecoder">decoder</a> -> <a href="Jsonm.html#TYPEsrc">src</a></code></pre><div class="info">
+<code class="code">decoder_src d</code> is <code class="code">d</code>'s input source.<br>
+</div>
+<br>
+<span id="encode"><h1>Encode</h1></span><br>
+<pre><span id="TYPEdst"><span class="keyword">type</span> <code class="type"></code>dst</span> = <code class="type">[ `Buffer of Buffer.t | `Channel of Pervasives.out_channel | `Manual ]</code> </pre>
+<div class="info">
+The type for output destinations. With a <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> destination the 
+    client must provide output storage with <a href="Jsonm.Manual.html#VALdst"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.dst</code></a>.<br>
+</div>
+
+<pre><span id="TYPEencoder"><span class="keyword">type</span> <code class="type"></code>encoder</span> </pre>
+<div class="info">
+The type for JSON encoders.<br>
+</div>
+
+<pre><span id="VALencoder"><span class="keyword">val</span> encoder</span> : <code class="type">?minify:bool -> [< <a href="Jsonm.html#TYPEdst">dst</a> ] -> <a href="Jsonm.html#TYPEencoder">encoder</a></code></pre><div class="info">
+<code class="code">encoder minify dst</code> is an encoder that outputs to <code class="code">dst</code>. If
+    <code class="code">minify</code> is <code class="code"><span class="keyword">true</span></code> (default) the output is made as compact as
+    possible, otherwise the output is indented. If you want better
+    control on whitespace use <code class="code">minify = <span class="keyword">true</span></code> and <a href="Jsonm.Uncut.html#VALencode"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Uncut</span>.encode</code></a>.<br>
+</div>
+<pre><span id="VALencode"><span class="keyword">val</span> encode</span> : <code class="type"><a href="Jsonm.html#TYPEencoder">encoder</a> -><br>       [< `Await | `End | `Lexeme of <a href="Jsonm.html#TYPElexeme">lexeme</a> ] -> [ `Ok | `Partial ]</code></pre><div class="info">
+<code class="code">encode e v</code> is: 
+    <ul>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Partial</span></code> iff <code class="code">e</code> has a <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> destination and needs more
+       output storage. The client must use <a href="Jsonm.Manual.html#VALdst"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.dst</code></a> to provide
+       a new buffer and then call <a href="Jsonm.html#VALencode"><code class="code"><span class="constructor">Jsonm</span>.encode</code></a> with <code class="code"><span class="keywordsign">`</span><span class="constructor">Await</span></code> until <code class="code"><span class="keywordsign">`</span><span class="constructor">Ok</span></code>
+       is returned.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Ok</span></code> when the encoder is ready to encode a new <code class="code"><span class="keywordsign">`</span><span class="constructor">Lexeme</span></code>
+       or <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code>.</li>
+</ul>
+
+    For <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> destinations, encoding <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code> always returns <code class="code"><span class="keywordsign">`</span><span class="constructor">Partial</span></code>,
+    the client should as usual use <a href="Jsonm.Manual.html#VALdst"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.dst</code></a> and continue with <code class="code"><span class="keywordsign">`</span><span class="constructor">Await</span></code>
+    until <code class="code"><span class="keywordsign">`</span><span class="constructor">Ok</span></code> is returned at which point <a href="Jsonm.Manual.html#VALdst_rem"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.dst_rem</code></a> <code class="code">e</code> is guaranteed
+    to be the size of the last provided buffer (i.e. nothing was written). 
+<p>
+
+    <b>Raises.</b> <code class="code"><span class="constructor">Invalid_argument</span></code> if a non <a href="Jsonm.html#datamodel">well-formed</a>
+    sequence of lexemes is encoded or if <code class="code"><span class="keywordsign">`</span><span class="constructor">Lexeme</span></code> or <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code> is 
+    encoded after a <code class="code"><span class="keywordsign">`</span><span class="constructor">Partial</span></code> encode.<br>
+</div>
+<pre><span id="VALencoder_dst"><span class="keyword">val</span> encoder_dst</span> : <code class="type"><a href="Jsonm.html#TYPEencoder">encoder</a> -> <a href="Jsonm.html#TYPEdst">dst</a></code></pre><div class="info">
+<code class="code">encoder_dst e</code> is <code class="code">e</code>'s output destination.<br>
+</div>
+<pre><span id="VALencoder_minify"><span class="keyword">val</span> encoder_minify</span> : <code class="type"><a href="Jsonm.html#TYPEencoder">encoder</a> -> bool</code></pre><div class="info">
+<code class="code">encoder_minify e</code> is <code class="code"><span class="keyword">true</span></code> if <code class="code">e</code>'s output is minified.<br>
+</div>
+<br>
+<span id="manual"><h1>Manual sources and destinations</h1></span><br>
+<pre><span class="keyword">module</span> <a href="Jsonm.Manual.html">Manual</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Jsonm.Manual.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+Manual input sources and output destinations.
+</div>
+<br>
+<span id="uncut"><h1>Uncut codec</h1></span><br>
+<pre><span class="keyword">module</span> <a href="Jsonm.Uncut.html">Uncut</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Jsonm.Uncut.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+Codec with comments and whitespace.
+</div>
+<br>
+<span id="limitations"><h1>Limitations</h1></span> 
+<p>
+
+    <span id="2_Decode"><h2>Decode</h2></span>
+<p>
+
+    Decoders parse valid JSON with the following limitations:
+    <ul>
+<li>JSON numbers are represented with OCaml <code class="code">float</code> values. 
+       This means that it can only represent integers exactly
+       in the in the interval [-2<sup class="superscript">53</sup>;2<sup class="superscript">53</sup>]. This is equivalent
+       to the contraints JavaScript has.</li>
+<li>A superset of JSON numbers is parsed. After having seen a minus
+       or a digit, including zero, <code class="code"><span class="constructor">Pervasives</span>.float_of_string</code>, is 
+       used. In particular this parses number with leading zeros, which are
+       specifically prohibited by the standard.</li>
+<li>Strings returned by <code class="code"><span class="keywordsign">`</span><span class="constructor">String</span></code>, <code class="code"><span class="keywordsign">`</span><span class="constructor">Name</span></code>, <code class="code"><span class="keywordsign">`</span><span class="constructor">White</span></code> and <code class="code"><span class="keywordsign">`</span><span class="constructor">Comment</span></code>
+       are limited by <code class="code"><span class="constructor">Sys</span>.max_string_length</code>.  There is no built-in
+       protection against the fact that the internal OCaml <code class="code"><span class="constructor">Buffer</span>.t</code>
+       value may raise <code class="code"><span class="constructor">Failure</span></code> on <a href="Jsonm.html#VALdecode"><code class="code"><span class="constructor">Jsonm</span>.decode</code></a>. This should
+       however only be a problem on 32-bits platforms if your 
+       strings are greater than 16Mo.</li>
+</ul>
+
+<p>
+
+    Position tracking assumes that each decoded Unicode scalar value
+    has a column width of 1. The same assumption may not be made by
+    the display program (e.g. for <code class="code">emacs</code>' compilation mode you need
+    to set <code class="code">compilation-error-screen-columns</code> to <code class="code">nil</code>). 
+<p>
+
+    The newlines LF (<code class="code"><span class="constructor">U</span>+000<span class="constructor">A</span></code>), CR (<code class="code"><span class="constructor">U</span>+000<span class="constructor">D</span></code>), and CRLF are all normalized
+    to LF internally. This may have an impact in some corner <code class="code"><span class="keywordsign">`</span><span class="constructor">Error</span></code>
+    cases. For example the invalid escape sequence <code class="code">&lt;<span class="constructor">U</span>+005<span class="constructor">C</span>,<span class="constructor">U</span>+000<span class="constructor">D</span>&gt;</code> in 
+    a string will be reported as being <code class="code"><span class="keywordsign">`</span><span class="constructor">Illegal_escape</span> (<span class="keywordsign">`</span><span class="constructor">Not_esc_uchar</span>
+    0x000A)</code>.
+<p>
+
+    <span id="2_Encode"><h2>Encode</h2></span>
+<p>
+
+    Encoders produce valid JSON provided the <em>client</em> ensures that
+    the following holds.
+    <ul>
+<li>All the strings given to the encoder must be valid UTF-8 and immutable.
+       Characters that need to be escaped are automatically escaped by <code class="code"><span class="constructor">Jsonm</span></code>.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Float</span></code> lexemes must not be, <code class="code"><span class="constructor">Pervasives</span>.nan</code>,
+       <code class="code"><span class="constructor">Pervasives</span>.infinity</code> or <code class="code"><span class="constructor">Pervasives</span>.neg_infinity</code>. They 
+       are encoded with the format string <code class="code"><span class="string">"%.16g"</span></code>, this allows 
+       to roundtrip all the integers that can be precisely represented
+       in OCaml <code class="code">float</code> values, i.e. the integers in the interval 
+       [-2<sup class="superscript">53</sup>;2<sup class="superscript">53</sup>]. This is equivalent to the constraints 
+       JavaScript has.</li>
+<li>If the <a href="Jsonm.Uncut.html">uncut</a> codec is used <code class="code"><span class="keywordsign">`</span><span class="constructor">White</span></code> must be made 
+       of <a href="Jsonm.Uncut.html#uncutdatamodel">JSON whitespace</a> and <code class="code"><span class="keywordsign">`</span><span class="constructor">Comment</span></code> 
+       must never be encoded.</li>
+</ul>
+<br>
+<br>
+<span id="errorrecovery"><h1>Error recovery</h1></span> 
+<p>
+
+    After a decoding error, if best-effort decoding is performed. The following
+    happens before continuing:
+    <ul>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Illegal_BOM</span></code>, the initial 
+       <a href="http://unicode.org/glossary/#byte_order_mark">BOM</a> is skipped.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Illegal_bytes</span></code>, <code class="code"><span class="keywordsign">`</span><span class="constructor">Illegal_escape</span></code>, <code class="code"><span class="keywordsign">`</span><span class="constructor">Illegal_string_uchar</span></code>, a
+       Unicode 
+       <a href="http://unicode.org/glossary/#replacement_character">replacement 
+       character</a> (<code class="code"><span class="constructor">U</span>+<span class="constructor">FFFD</span></code>) is substituted to the illegal sequence.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Illegal_literal</span></code>, <code class="code"><span class="keywordsign">`</span><span class="constructor">Illegal_number</span></code> the corresponding 
+       <code class="code"><span class="keywordsign">`</span><span class="constructor">Lexeme</span></code> is skipped.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Expected</span> r</code>, input is discarded until a synchronyzing lexeme
+       that depends on <code class="code">r</code> is found.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Unclosed</span></code>, the end of input is reached, further decodes will be
+       <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code></li>
+</ul>
+<br>
+<br>
+<span id="examples"><h1>Examples</h1></span> 
+<p>
+
+    <span id="filter"><h2>Trip</h2></span>
+<p>
+
+    The result of <code class="code">trip src dst</code> has the JSON from <code class="code">src</code> written on <code class="code">dst</code>.
+<code class="code"><span class="keyword">let</span>&nbsp;trip&nbsp;?encoding&nbsp;?minify&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(src&nbsp;:&nbsp;[<span class="keywordsign">`</span><span class="constructor">Channel</span>&nbsp;<span class="keyword">of</span>&nbsp;in_channel&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">String</span>&nbsp;<span class="keyword">of</span>&nbsp;string])<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(dst&nbsp;:&nbsp;[<span class="keywordsign">`</span><span class="constructor">Channel</span>&nbsp;<span class="keyword">of</span>&nbsp;out_channel&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Buffer</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Buffer</span>.t])<br>
+&nbsp;&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;loop&nbsp;d&nbsp;e&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Jsonm</span>.decode&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Lexeme</span>&nbsp;_&nbsp;<span class="keyword">as</span>&nbsp;v&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;ignore&nbsp;(<span class="constructor">Jsonm</span>.encode&nbsp;e&nbsp;v);&nbsp;loop&nbsp;d&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;ignore&nbsp;(<span class="constructor">Jsonm</span>.encode&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>);&nbsp;<span class="keywordsign">`</span><span class="constructor">Ok</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Error</span>&nbsp;err&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Error</span>&nbsp;(<span class="constructor">Jsonm</span>.decoded_range&nbsp;d,&nbsp;err)<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Await</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keyword">assert</span>&nbsp;<span class="keyword">false</span><br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;d&nbsp;=&nbsp;<span class="constructor">Jsonm</span>.decoder&nbsp;?encoding&nbsp;src&nbsp;<span class="keyword">in</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;e&nbsp;=&nbsp;<span class="constructor">Jsonm</span>.encoder&nbsp;?minify&nbsp;dst&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;loop&nbsp;d&nbsp;e<br>
+</code>
+    Using the <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> interface, <code class="code">trip_fd</code> does the same but between Unix
+    file descriptors.
+<code class="code"><span class="keyword">let</span>&nbsp;trip_fd&nbsp;?encoding&nbsp;?minify<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(fdi&nbsp;:&nbsp;<span class="constructor">Unix</span>.file_descr)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(fdo&nbsp;:&nbsp;<span class="constructor">Unix</span>.file_descr)&nbsp;<br>
+&nbsp;&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;encode&nbsp;fd&nbsp;s&nbsp;e&nbsp;v&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Jsonm</span>.encode&nbsp;e&nbsp;v&nbsp;<span class="keyword">with</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Ok</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;()&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Partial</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;unix_write&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;write&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;=&nbsp;<span class="keyword">try</span>&nbsp;<span class="constructor">Unix</span>.single_write&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Unix</span>.<span class="constructor">Unix_error</span>&nbsp;(<span class="constructor">Unix</span>.<span class="constructor">EINTR</span>,&nbsp;_,&nbsp;_)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;write&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;wc&nbsp;=&nbsp;write&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<span class="keyword">in</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>&nbsp;wc&nbsp;&lt;&nbsp;l&nbsp;<span class="keyword">then</span>&nbsp;unix_write&nbsp;fd&nbsp;s&nbsp;(j&nbsp;+&nbsp;wc)&nbsp;(l&nbsp;-&nbsp;wc)&nbsp;<span class="keyword">else</span>&nbsp;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;unix_write&nbsp;fd&nbsp;s&nbsp;0&nbsp;(<span class="constructor">String</span>.length&nbsp;s&nbsp;-&nbsp;<span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.dst_rem&nbsp;e);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.dst&nbsp;e&nbsp;s&nbsp;0&nbsp;(<span class="constructor">String</span>.length&nbsp;s);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encode&nbsp;fd&nbsp;s&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">Await</span><br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;loop&nbsp;fdi&nbsp;fdo&nbsp;ds&nbsp;es&nbsp;d&nbsp;e&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Jsonm</span>.decode&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Lexeme</span>&nbsp;_&nbsp;<span class="keyword">as</span>&nbsp;v&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;encode&nbsp;fdo&nbsp;es&nbsp;e&nbsp;v;&nbsp;loop&nbsp;fdi&nbsp;fdo&nbsp;ds&nbsp;es&nbsp;d&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;encode&nbsp;fdo&nbsp;es&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>;&nbsp;<span class="keywordsign">`</span><span class="constructor">Ok</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Error</span>&nbsp;err&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Error</span>&nbsp;(<span class="constructor">Jsonm</span>.decoded_range&nbsp;d,&nbsp;err)<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Await</span>&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;unix_read&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;=&nbsp;<span class="keyword">try</span>&nbsp;<span class="constructor">Unix</span>.read&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Unix</span>.<span class="constructor">Unix_error</span>&nbsp;(<span class="constructor">Unix</span>.<span class="constructor">EINTR</span>,&nbsp;_,&nbsp;_)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unix_read&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;rc&nbsp;=&nbsp;unix_read&nbsp;fdi&nbsp;ds&nbsp;0&nbsp;(<span class="constructor">String</span>.length&nbsp;ds)&nbsp;<span class="keyword">in</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.src&nbsp;d&nbsp;ds&nbsp;0&nbsp;rc;&nbsp;loop&nbsp;fdi&nbsp;fdo&nbsp;ds&nbsp;es&nbsp;d&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;ds&nbsp;=&nbsp;<span class="constructor">String</span>.create&nbsp;65536&nbsp;<span class="comment">(*&nbsp;UNIX_BUFFER_SIZE&nbsp;in&nbsp;4.0.0&nbsp;*)</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;es&nbsp;=&nbsp;<span class="constructor">String</span>.create&nbsp;65536&nbsp;<span class="comment">(*&nbsp;UNIX_BUFFER_SIZE&nbsp;in&nbsp;4.0.0&nbsp;*)</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;d&nbsp;=&nbsp;<span class="constructor">Jsonm</span>.decoder&nbsp;?encoding&nbsp;<span class="keywordsign">`</span><span class="constructor">Manual</span>&nbsp;<span class="keyword">in</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;e&nbsp;=&nbsp;<span class="constructor">Jsonm</span>.encoder&nbsp;?minify&nbsp;<span class="keywordsign">`</span><span class="constructor">Manual</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.dst&nbsp;e&nbsp;es&nbsp;0&nbsp;(<span class="constructor">String</span>.length&nbsp;es);<br>
+&nbsp;&nbsp;loop&nbsp;fdi&nbsp;fdo&nbsp;ds&nbsp;es&nbsp;d&nbsp;e<br>
+</code>
+    <span id="memsel"><h2>Member selection</h2></span> 
+<p>
+
+    The result of <code class="code">memsel names src</code> is the list of string values of 
+    members of <code class="code">src</code> that have their name in <code class="code">names</code>. In this example, 
+    decoding errors are silently ignored.
+<code class="code"><span class="keyword">let</span>&nbsp;memsel&nbsp;?encoding&nbsp;names&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(src&nbsp;:&nbsp;[<span class="keywordsign">`</span><span class="constructor">Channel</span>&nbsp;<span class="keyword">of</span>&nbsp;in_channel&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">String</span>&nbsp;<span class="keyword">of</span>&nbsp;string])<br>
+&nbsp;&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;loop&nbsp;acc&nbsp;names&nbsp;d&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Jsonm</span>.decode&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Lexeme</span>&nbsp;(<span class="keywordsign">`</span><span class="constructor">Name</span>&nbsp;n)&nbsp;<span class="keyword">when</span>&nbsp;<span class="constructor">List</span>.mem&nbsp;n&nbsp;names&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">begin</span>&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Jsonm</span>.decode&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Lexeme</span>&nbsp;(<span class="keywordsign">`</span><span class="constructor">String</span>&nbsp;s)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;loop&nbsp;(s&nbsp;::&nbsp;acc)&nbsp;names&nbsp;d<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;loop&nbsp;acc&nbsp;names&nbsp;d<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Lexeme</span>&nbsp;_&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Error</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;loop&nbsp;acc&nbsp;names&nbsp;d<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">List</span>.rev&nbsp;acc&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Await</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keyword">assert</span>&nbsp;<span class="keyword">false</span><br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;loop&nbsp;[]&nbsp;names&nbsp;(<span class="constructor">Jsonm</span>.decoder&nbsp;?encoding&nbsp;src)<br>
+</code>
+<p>
+
+    <span id="tree"><h2>Generic JSON representation</h2></span>
+<p>
+
+    A generic OCaml representation of JSON text is the following one.
+<code class="code"><span class="keyword">type</span>&nbsp;json&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;[&nbsp;<span class="keywordsign">`</span><span class="constructor">Null</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Bool</span>&nbsp;<span class="keyword">of</span>&nbsp;bool&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Float</span>&nbsp;<span class="keyword">of</span>&nbsp;float<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">String</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">A</span>&nbsp;<span class="keyword">of</span>&nbsp;json&nbsp;list&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">O</span>&nbsp;<span class="keyword">of</span>&nbsp;(string&nbsp;*&nbsp;json)&nbsp;list&nbsp;]<br>
+</code>
+    The result of <code class="code">json_of_src src</code> is the JSON text from <code class="code">src</code> in this 
+    representation. The function is tail recursive.
+<code class="code"><span class="keyword">exception</span>&nbsp;<span class="constructor">Escape</span>&nbsp;<span class="keyword">of</span>&nbsp;((int&nbsp;*&nbsp;int)&nbsp;*&nbsp;(int&nbsp;*&nbsp;int))&nbsp;*&nbsp;<span class="constructor">Jsonm</span>.error<br>
+<br>
+<span class="keyword">let</span>&nbsp;json_of_src&nbsp;?encoding&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(src&nbsp;:&nbsp;[<span class="keywordsign">`</span><span class="constructor">Channel</span>&nbsp;<span class="keyword">of</span>&nbsp;in_channel&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">String</span>&nbsp;<span class="keyword">of</span>&nbsp;string])<br>
+&nbsp;&nbsp;=<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;dec&nbsp;d&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Jsonm</span>.decode&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Lexeme</span>&nbsp;l&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;l<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Error</span>&nbsp;e&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;raise&nbsp;(<span class="constructor">Escape</span>&nbsp;(<span class="constructor">Jsonm</span>.decoded_range&nbsp;d,&nbsp;e))<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Await</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keyword">assert</span>&nbsp;<span class="keyword">false</span><br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;value&nbsp;v&nbsp;k&nbsp;d&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;v&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Os</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;obj&nbsp;[]&nbsp;k&nbsp;d&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">As</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;arr&nbsp;[]&nbsp;k&nbsp;d<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Null</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Bool</span>&nbsp;_&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">String</span>&nbsp;_&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Float</span>&nbsp;_&nbsp;<span class="keyword">as</span>&nbsp;v&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;k&nbsp;v&nbsp;d&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keyword">assert</span>&nbsp;<span class="keyword">false</span><br>
+&nbsp;&nbsp;<span class="keyword">and</span>&nbsp;arr&nbsp;vs&nbsp;k&nbsp;d&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;dec&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Ae</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;k&nbsp;(<span class="keywordsign">`</span><span class="constructor">A</span>&nbsp;(<span class="constructor">List</span>.rev&nbsp;vs))&nbsp;d<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;v&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;value&nbsp;v&nbsp;(<span class="keyword">fun</span>&nbsp;v&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;arr&nbsp;(v&nbsp;::&nbsp;vs)&nbsp;k)&nbsp;d<br>
+&nbsp;&nbsp;<span class="keyword">and</span>&nbsp;obj&nbsp;ms&nbsp;k&nbsp;d&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;dec&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Oe</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;k&nbsp;(<span class="keywordsign">`</span><span class="constructor">O</span>&nbsp;(<span class="constructor">List</span>.rev&nbsp;ms))&nbsp;d<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Name</span>&nbsp;n&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;value&nbsp;(dec&nbsp;d)&nbsp;(<span class="keyword">fun</span>&nbsp;v&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;obj&nbsp;((n,&nbsp;v)&nbsp;::&nbsp;ms)&nbsp;k)&nbsp;d<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keyword">assert</span>&nbsp;<span class="keyword">false</span><br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;d&nbsp;=&nbsp;<span class="constructor">Jsonm</span>.decoder&nbsp;?encoding&nbsp;src&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">try</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">JSON</span>&nbsp;(value&nbsp;(dec&nbsp;d)&nbsp;(<span class="keyword">fun</span>&nbsp;v&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;v)&nbsp;d)&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Escape</span>&nbsp;(r,&nbsp;e)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Error</span>&nbsp;(r,&nbsp;e)<br>
+</code>
+    The result of <code class="code">json_to_dst dst json</code> has the JSON text <code class="code">json</code> written
+    on <code class="code">dst</code>. The function is tail recursive. 
+<code class="code"><span class="keyword">let</span>&nbsp;json_to_dst&nbsp;~minify&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(dst&nbsp;:&nbsp;[<span class="keywordsign">`</span><span class="constructor">Channel</span>&nbsp;<span class="keyword">of</span>&nbsp;out_channel&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Buffer</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Buffer</span>.t&nbsp;])&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(json&nbsp;:&nbsp;json)<br>
+&nbsp;&nbsp;=<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;enc&nbsp;e&nbsp;l&nbsp;=&nbsp;ignore&nbsp;(<span class="constructor">Jsonm</span>.encode&nbsp;e&nbsp;(<span class="keywordsign">`</span><span class="constructor">Lexeme</span>&nbsp;l))&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;value&nbsp;v&nbsp;k&nbsp;e&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;v&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">A</span>&nbsp;vs&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;arr&nbsp;vs&nbsp;k&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">O</span>&nbsp;ms&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;obj&nbsp;ms&nbsp;k&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Null</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Bool</span>&nbsp;_&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Float</span>&nbsp;_&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">String</span>&nbsp;_&nbsp;<span class="keyword">as</span>&nbsp;v&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;enc&nbsp;e&nbsp;v;&nbsp;k&nbsp;e<br>
+&nbsp;&nbsp;<span class="keyword">and</span>&nbsp;arr&nbsp;vs&nbsp;k&nbsp;e&nbsp;=&nbsp;enc&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">As</span>;&nbsp;arr_vs&nbsp;vs&nbsp;k&nbsp;e<br>
+&nbsp;&nbsp;<span class="keyword">and</span>&nbsp;arr_vs&nbsp;vs&nbsp;k&nbsp;e&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;vs&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;v&nbsp;::&nbsp;vs'&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;value&nbsp;v&nbsp;(arr_vs&nbsp;vs'&nbsp;k)&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;[]&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;enc&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">Ae</span>;&nbsp;k&nbsp;e<br>
+&nbsp;&nbsp;<span class="keyword">and</span>&nbsp;obj&nbsp;ms&nbsp;k&nbsp;e&nbsp;=&nbsp;enc&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">Os</span>;&nbsp;obj_ms&nbsp;ms&nbsp;k&nbsp;e<br>
+&nbsp;&nbsp;<span class="keyword">and</span>&nbsp;obj_ms&nbsp;ms&nbsp;k&nbsp;e&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;ms&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;(n,&nbsp;v)&nbsp;::&nbsp;ms&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;enc&nbsp;e&nbsp;(<span class="keywordsign">`</span><span class="constructor">Name</span>&nbsp;n);&nbsp;value&nbsp;v&nbsp;(obj_ms&nbsp;ms&nbsp;k)&nbsp;e<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;[]&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;enc&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">Oe</span>;&nbsp;k&nbsp;e<br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;e&nbsp;=&nbsp;<span class="constructor">Jsonm</span>.encoder&nbsp;~minify&nbsp;dst&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;finish&nbsp;e&nbsp;=&nbsp;ignore&nbsp;(<span class="constructor">Jsonm</span>.encode&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>)&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">match</span>&nbsp;json&nbsp;<span class="keyword">with</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">A</span>&nbsp;_&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">O</span>&nbsp;_&nbsp;<span class="keyword">as</span>&nbsp;json&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;value&nbsp;json&nbsp;finish&nbsp;e<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;invalid_arg&nbsp;<span class="string">"invalid&nbsp;json&nbsp;text"</span><br>
+</code><br>
+</body></html>

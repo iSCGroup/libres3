@@ -1,0 +1,201 @@
+OASISFormat: 0.3
+OCamlVersion: >= 3.12.1
+FindlibVersion: >= 1.2.0
+Name:        libres3
+Version:     0.1
+Synopsis:    Amazon S3 compatible server
+Authors:     edwin@skylable.com
+Maintainers: Skylable Dev Team <dev-team@skylable.com>
+License:     GPL-2.0 with OpenSSL exception
+LicenseFile: COPYING
+Homepage: http://www.skylable.com/products/libres3
+Description:
+  LibreS3 is a robust Open Source replacement for the Amazon S3 service,
+  implementing (a subset of) the S3 REST API.
+  It is written in a monadic style, currently using Lwt and Ocsigenserver as implementations.
+  .
+  Standard S3 client libraries and tools (for example s3cmd, python-boto, ocaml-aws, etc.)
+  can be used to access it.
+  .
+  It uses Skylable SX as the storage backend, which automatically provides data deduplication and replication.
+
+Plugins:     DevFiles (0.3), StdFiles (0.3)
+FilesAB:
+    src/server/configure.ml.ab,
+    src/files/conf/libres3.sample.s3cfg.ab,
+    src/files/conf/libres3-insecure.sample.s3cfg.ab,
+    src/files/conf/logrotate.d/libres3.ab,
+    src/files/sbin/libres3_env.sh.ab,
+    src/files/sbin/libres3.ab
+PostCleanCommand:
+    rm -f bisect*.out reply.log sigs.log
+PostBuildCommand:
+    chmod +x src/files/sbin/libres3
+
+BuildTools: ocamlbuild
+
+Flag ocsigen
+  Description: build ocsigen-based standalone server
+  Default: true
+
+Flag fcgi
+  Description: build fcgi-based server (for development only)
+  Default: false
+
+Flag internaldocs
+  Description: build internal docs
+  Default: false
+
+Library sxclient
+  Path: src/sxclient
+  Install: false
+  Modules: Sigs, EventIO, SXIO, SXFile, SXC, SXDefaultIO, Config
+  InternalModules: Cache, Http, DLinkedList, Lru, SharedData, WeakBuffer
+  BuildDepends: netclient, netstring, threads, jsonm, cryptokit, ssl, equeue-ssl
+  CompiledObject: Best
+
+Library "sxclient.lwt"
+  Path: src/sxclient/lwt
+  Modules: SXLwt
+  Build$: flag(ocsigen)
+  Install: false
+  CompiledObject: Best
+  BuildDepends: sxclient, lwt.unix
+
+Library "sxclient.thread"
+  Path: src/sxclient/thread
+  Modules: SXThread
+  Install: false
+  CompiledObject: Best
+  BuildDepends: sxclient, threads
+
+Executable "sxuls"
+  Install: false
+  Path: test/
+  MainIs: sxuls.ml
+  BuildDepends: sxclient.thread
+  CompiledObject: Best
+
+Executable "sxucp"
+  Install: false
+  Path: test/
+  MainIs: sxucp.ml
+  BuildDepends: sxclient.thread
+  CompiledObject: Best
+
+Document "api-client"
+  Title: API reference for SX client monad interface
+  Type:	ocamlbuild (0.3)
+  BuildTools+: ocamldoc
+  XOcamlBuildPath: src/
+  XOcamlbuildLibraries: sxclient, sxclient.thread, sxclient.lwt
+
+Library server
+  Path: src/server
+  Modules: Paths, Cmdline, Dispatch, Bucket, ServiceOps, BucketOps, ObjectOps, Error, CodedIO, CanonRequest, Cryptoutil, Util
+  CompiledObject: Best
+  BuildDepends: xmlm, netstring, netsys, str, cryptokit, sxclient, threads
+  Install: false
+
+Document "api-server"
+  Title: API reference for server
+  Type:	ocamlbuild (0.3)
+  Install: false
+  Build$: flag(internaldocs)
+  BuildTools+: ocamldoc
+  XOcamlBuildPath: src/
+  XOcamlbuildLibraries: server 
+
+Executable libres3_fcgi
+  Path: src
+  Build$: flag(fcgi)
+  Install: false
+  MainIs: fcgi/libres3_fcgi.ml
+  CompiledObject: Best
+  BuildDepends: server, sxclient.thread, netcgi2
+  Install: true
+
+Library libres3_site
+  Path: src/ocsigen
+  Build$: flag(ocsigen)
+  Modules: Site
+  CompiledObject: Best
+  BuildDepends: server, netcgi2, threads, sxclient.lwt
+  Install: false
+
+Executable libres3_ocsigen
+  Path: src/ocsigen
+  Build$: flag(ocsigen)
+  Install$: flag(ocsigen)
+  MainIs: libres3_ocsigen.ml
+  BuildDepends: netsys,ocsigenserver,libres3_site
+  CompiledObject: Best
+  DataFiles:
+    ../files/conf/libres3.sample.s3cfg ($sysconfdir/libres3/),
+    ../files/conf/libres3-insecure.sample.s3cfg ($sysconfdir/libres3/),
+    ../files/conf/logrotate.d/libres3 ($docdir/logrotate.d/),
+    ../files/sbin/libres3_env.sh ($sbindir/),
+    ../files/sbin/libres3 ($sbindir/),
+    ../../README ($docdir/),
+    ../../COPYING ($docdir/)
+
+Executable libres3_setup
+  Path: src/ocsigen
+  Install: true
+  MainIs: libres3_setup.ml
+  BuildDepends: unix
+  CompiledObject: Best
+
+Executable server_test
+  Install:  false
+  Path: test
+  Build$: flag(tests)
+  MainIs: test_server.ml
+  BuildDepends: oUnit, server, sxclient.thread, netcgi2
+  CompiledObject: Best
+
+Executable directio_test
+  Install: false
+  Path: test
+  Build$: flag(tests)
+  MainIs: test_directio.ml
+  CompiledObject: Best
+  BuildDepends: cryptokit, oUnit, sxclient.thread, server
+
+Executable lwtio_test
+  Install: false
+  Path: test
+  Build$: flag(tests) && flag(ocsigen)
+  MainIs: test_lwtio.ml
+  CompiledObject: Best
+  BuildDepends: cryptokit, oUnit, sxclient.lwt,  server
+
+Executable misc_test
+  Install: false
+  Path: test
+  Build$: flag(tests)
+  MainIs: test_misc.ml
+  CompiledObject: Best
+# TODO: move interval and codedio somewhere else
+  BuildDepends: cryptokit, oUnit, server
+
+Executable net_test
+  Install: false
+  Path: test
+  Build$: flag(tests)
+  MainIs: netTest.ml
+  CompiledObject: Best
+  BuildDepends: cryptokit, oUnit, netclient, server
+
+Test misc
+  Command: $misc_test
+
+Test server
+  Command: $server_test
+
+Test directio
+  Command: $directio_test
+
+Test lwtio
+  Command: $lwtio_test
+  Run$: flag(ocsigen)

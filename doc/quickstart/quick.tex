@@ -1,0 +1,278 @@
+% !TEX root = quickstart.tex
+\pagestyle{empty}
+
+\begin{center}
+    \includegraphics[width=120mm]{logo.eps}\\
+    \vspace{4cm}
+    \rule{\textwidth}{1.6pt}\vspace*{-\baselineskip}\vspace*{2pt}
+    \rule{\textwidth}{0.4pt}\\[\baselineskip]
+    {\fontsize{40}{50}\bfseries\scshape LibreS3 Quick Start Guide}
+    \rule{\textwidth}{0.4pt}\vspace*{-\baselineskip}\vspace{3.2pt}
+    \rule{\textwidth}{1.6pt}\\[\baselineskip]
+\end{center}
+
+%\definecolor{lightblue}{rgb}{.780,.886,.953}
+\definecolor{lightblue}{rgb}{.835,.910,.965}
+\lstset {
+    escapeinside=\^\^,
+    frame=single,
+    breaklines=true,
+    backgroundcolor=\color{lightblue},
+}
+
+\LARGE
+\chapter{Introduction}
+
+\indent LibreS3 is a robust Open Source implementation of the Amazon S3 service,
+supporting a subset of the S3 REST API.
+
+Standard S3 client libraries and tools (for example python-boto, s3cmd, DragonDisk, etc.) can
+be used to access it.
+
+LibreS3 uses Skylable \SX as the storage backend, which automatically provides data
+deduplication and replication.\\
+
+\section*{Useful links}
+\begin{itemize}
+    \item \url{http://lists.skylable.com}
+    \item \url{https://bugzilla.skylable.com}
+    \item \url{http://wiki.skylable.com}
+\end{itemize}
+
+\chapter{Installation}
+
+\section*{Requirements}
+
+LibreS3 is regularly tested on Linux and FreeBSD. We recommend using the
+binary packages from \url{http://www.skylable.com/download} if your platform
+is supported. Otherwise, on most Unix platforms you can compile LibreS3
+from source. You will need the following packages to be installed together with their
+development versions:
+\begin{itemize}
+    \item OCaml (>= 3.12.1)
+    \item camlp4 (matching your OCaml compiler version)
+    \item OpenSSL
+    \item PCRE C library
+    \item GNU Make and m4
+\end{itemize}
+For example, on Debian run:
+\small
+\begin{lstlisting}
+# apt-get install ocaml-native-compilers camlp4-extra libssl-dev libpcre3-dev make m4
+\end{lstlisting}
+\LARGE
+On Fedora run:
+\small
+\begin{lstlisting}
+# yum install ocaml /usr/bin/camlp4of /usr/bin/camlp4rf /usr/bin/camlp4 pcre-devel openssl-devel make m4 ncurses-devel
+\end{lstlisting}
+\LARGE
+
+\newpage
+\section*{Compilation}
+
+Follow the standard installation procedure. In this guide we will install
+LibreS3 into \verb+/opt/libres3+.
+\small
+\begin{lstlisting}
+$ ./configure --prefix=/opt/libres3 && make
+# make install
+\end{lstlisting}
+\LARGE
+
+\chapter{Configuration}
+
+\section*{Requirements}
+
+LibreS3 by default listens on ports 8008 and 8443, which need to be available on a given
+IP address.
+
+LibreS3 connects to the SX cluster via HTTP(S). You can run LibreS3 and SX
+on the same or different hosts.
+
+\subsection*{DNS zone entry}
+
+S3 buckets require a wildcard A record pointing to the IP address (1.2.3.4 below) of the
+host running LibreS3, for example:
+\small
+\begin{lstlisting}
+*.libres3.example.com. A 1.2.3.4
+\end{lstlisting}
+\LARGE
+
+In case you don't have control over the DNS you'll have to modify the \verb|/etc/hosts| file
+of each client machine and add a line for each bucket you want to access:
+\small
+\begin{lstlisting}
+libres3.example.com 1.2.3.4
+bucket1.libres3.example.com 1.2.3.4
+bucket2.libres3.example.com 1.2.3.4
+\end{lstlisting}
+\LARGE
+
+\section*{Setting up a LibreS3 node}
+
+Setting up LibreS3 is as simple as running the \verb+libres3_setup+ interactive
+tool. If you provide the path to an existing \SX cluster configuration file created
+by \verb+sxsetup+, most of the settings will be done automatically.
+
+Please make sure the default volume replica count setting is less or equal
+to the number of nodes in the SX cluster.
+
+In the examples below we assume you
+have an \SX cluster running on \verb|sx.example.com| and you want to run
+LibreS3 on \verb|libres3.example.com|.
+
+Example setup with sxsetup.conf:
+\small
+\begin{lstlisting}
+# /opt/libres3/sbin/libres3_setup  --sxsetup-conf /opt/sx/etc/sxserver/sxsetup.conf
+Successfully loaded SX configuration from '/opt/sx/etc/sxserver/sxsetup.conf'
+Successfully obtained admin auth token
+Successfully obtained sx server ip/dns name
+Successfully obtained run as user
+Successfully obtained run as group
+Successfully obtained ssl key file
+Successfully obtained ssl certificate file
+
+Default volume replica count: 2
+
+S3 (DNS) name: libres3.example.com
+
+Generating '/opt/libres3/etc/libres3/libres3.conf'
+Updating '/opt/libres3/etc/libres3/libres3-insecure.sample.s3cfg'
+Successfully loaded SX configuration from '/opt/libres3/etc/libres3/libres3-insecure.sample.s3cfg'
+Updating '/opt/libres3/etc/libres3/libres3.sample.s3cfg'
+Successfully loaded SX configuration from '/opt/libres3/etc/libres3/libres3.sample.s3cfg'
+\end{lstlisting}
+\LARGE
+
+Example without sxsetup.conf:
+\footnote{you can use 'sxserver status' on the SX node to find out the required information}
+\small
+\begin{lstlisting}
+# /opt/libres3/sbin/libres3_setup
+Admin auth token:
+0DPiKuNIrrVmD8IUCuw1hQxNqZeKUL6IZ26Lro8FqwNmCJa9pH5XkgAA
+
+SX server IP/DNS name: sx.example.com
+
+Run as user: nobody
+
+Run as group: nobody
+
+SSL key file: /opt/sx/etc/ssl/private/sxkey.pem
+
+SSL certificate file: /opt/sx/etc/ssl/certs/sxcert.pem
+
+Default volume replica count: 2
+
+S3 (DNS) name: libres3.example.com
+
+Generating '/opt/libres3/etc/libres3/libres3.conf'
+File '/opt/libres3/etc/libres3/libres3.conf' already exists, overwriting
+Updating '/opt/libres3/etc/libres3/libres3-insecure.sample.s3cfg'
+Successfully loaded SX configuration from '/opt/libres3/etc/libres3/libres3-insecure.sample.s3cfg'
+Updating '/opt/libres3/etc/libres3/libres3.sample.s3cfg'
+Successfully loaded SX configuration from '/opt/libres3/etc/libres3/libres3.sample.s3cfg'
+\end{lstlisting}
+\LARGE
+
+To start/stop LibreS3\footnote{LibreS3 and SX will communicate using SSL by
+default. For debugging purposes you can configure SX with 'sxsetup --no-ssl' and then you have to start LibreS3 with --no-ssl}:
+
+\small
+\begin{lstlisting}
+# /opt/libres3/sbin/libres3 start
+Starting LibreS3
+LibreS3 started successfully
+# /opt/libres3/sbin/libres3 status
+--- LibreS3 STATUS ---
+libres3 is running (PID 26780)
+
+--- LibreS3 INFO ---
+SSL private key: /opt/sx/etc/ssl/private/sxkey.pem
+LibreS3 logfiles: /opt/libres3/var/log/libres3
+# /opt/libres3/sbin/libres3 stop
+Sending SIGTERM to 26780
+Waiting for  26780
+\end{lstlisting}
+\LARGE
+
+If the server doesn't start, please check the log files for details.
+
+That's it - your LibreS3 cloud storage is already up and running!
+You can now connect to it with your favourite S3 client.
+
+\chapter{Client configuration}
+\section*{s3cmd}
+
+You can use the generated s3cfg config file from\\
+\verb|"/opt/libres3/etc/libres3/libres3.sample.s3cfg"| or
+configure s3cmd from scratch. Below we assume your LibreS3's
+is running on \verb|"libres3.example.com"| and it supports SSL.
+The important s3cmd configuration settings are:
+
+\small
+\begin{lstlisting}
+^\textbf{use\_https}^ True
+^\textbf{host\_base}^ libres3.example.com:8443
+^\textbf{host\_bucket}^ %(bucket)s.libres3.example.com:8443
+^\textbf{access\_key}^ <your-sx-username>
+^\textbf{secret\_key}^ <your-sx-key>
+\end{lstlisting}
+\LARGE
+
+In case you don't use SSL, please use the port 8008 instead of 8443, and set
+\verb|"use_https"| to \verb|"False"|. Once you've configured s3cmd check
+that it properly connects to LibreS3:
+\small
+\begin{lstlisting}
+$ s3cmd ls --debug 2>&1 | grep host
+\end{lstlisting}
+\LARGE
+
+Supported s3cmd commands:
+\begin{description}
+    \item[Bucket] \verb|mb|, \verb|rb|, \verb|ls|, \verb|la|, \verb|du|
+    \item[Object] \verb|put|, \verb|get|, \verb|del|, \verb|sync|, \verb|info|,
+        \verb|cp|, \verb|mv|
+\end{description}
+
+\section*{Python-boto}
+
+S3 clients using Python boto are configured with the \verb|~/.boto| file.
+A typical configuration looks as follows:
+\small
+\begin{lstlisting}
+[Credentials]
+aws_access_key_id=<your-sx-username>
+aws_secret_access_key=<your-sx-key>
+s3_host=libres3.example.com:8443
+[Boto]
+is_secure = True
+\end{lstlisting}
+\LARGE
+
+Note that setting \verb|"s3_host"| will override the hostname you give to
+applications on the command-line. If you are using an application that allows
+setting the S3 hostname on the command-line, you might want to use that instead.
+
+\section*{Other clients}
+For information on other clients please refer to our wiki:
+\url{http://wiki.skylable.com/wiki/LibreS3_Clients}
+
+\chapter{Troubleshooting}
+In case you face a problem connecting to your LibreS3 server, please check
+the log files located at:\\ \verb|/opt/libres3/var/log/libres3/*.log|\\
+You can also enable logging of full HTTP requests with:
+\small
+\begin{lstlisting}
+# export LIBRES3_DEBUG=1
+# /opt/libres3/sbin/libres3 restart
+\end{lstlisting}
+\LARGE
+For more information and FAQ please visit \url{http://wiki.skylable.com}.
+If you can't find your solution there, please subscribe to our mailing list
+at \url{http://lists.skylable.com} and post about your issues.
+

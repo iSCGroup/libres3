@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Jsonm.Manual.html">
+<link rel="Up" href="Jsonm.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Jsonm" rel="Chapter" href="Jsonm.html"><link title="Uncut data model" rel="Section" href="#uncutdatamodel">
+<link title="Decode" rel="Section" href="#1_Decode">
+<link title="Encode" rel="Section" href="#1_Encode">
+<title>Jsonm.Uncut</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Jsonm.Manual.html" title="Jsonm.Manual">Previous</a>
+&nbsp;<a class="up" href="Jsonm.html" title="Jsonm">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_Jsonm.Uncut.html">Jsonm.Uncut</a></h1>
+<pre><span class="keyword">module</span> Uncut: <code class="code"><span class="keyword">sig</span></code> <a href="Jsonm.Uncut.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>Codec with comments and whitespace. 
+<p>
+
+    The uncut codec also processes whitespace and JavaScript
+    comments. The latter is non-standard JSON, fail on <code class="code"><span class="keywordsign">`</span><span class="constructor">Comment</span></code>
+    decoding if you want to process whitespace but stick to the standard.
+<p>
+
+    The uncut codec preserves as much of the original input as
+    possible. Perfect round-trip with <code class="code"><span class="constructor">Jsonm</span></code> is however impossible for 
+    the following reasons:
+    <ul>
+<li>Escapes unescaped by the decoder may not be escaped or escaped 
+       differently by the encoder.</li>
+<li>The encoder automatically inserts name separator <code class="code"><span class="string">':'</span></code> and
+       value separators <code class="code"><span class="string">","</span></code>. If you just reencode the sequence of 
+       decodes, whitespace and comments may (harmlessly, but significantly) 
+       commute with these separators.</li>
+<li>Internally the encoder uses <code class="code"><span class="constructor">U</span>+000<span class="constructor">A</span></code> (<code class="code"><span class="string">'\n'</span></code>) for newlines.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Float</span></code> lexemes may be rewritten differently by the encoder.</li>
+</ul>
+<br>
+<hr width="100%">
+<br>
+<span id="uncutdatamodel"><h1>Uncut data model</h1></span> 
+<p>
+
+      The uncut data model is the same as the regular
+      <a href="Jsonm.html#datamodel">data model</a>, except that before or after any lexeme
+      you may decode/encode one or more:
+      <ul>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">White</span> w</code>, representing JSON whitespace <code class="code">w</code>. On input 
+         the sequence CR (<code class="code"><span class="constructor">U</span>+000<span class="constructor">D</span></code>) and CRLF (&lt;<code class="code"><span class="constructor">U</span>+000<span class="constructor">A</span></code>, <code class="code"><span class="constructor">U</span>+000<span class="constructor">A</span></code>&gt;)
+         are normalized to <code class="code"><span class="constructor">U</span>+000<span class="constructor">A</span></code>. The string <code class="code">w</code> must be
+         a sequence of <code class="code"><span class="constructor">U</span>+0020</code>, <code class="code"><span class="constructor">U</span>+0009</code>, <code class="code"><span class="constructor">U</span>+000<span class="constructor">A</span></code> or <code class="code"><span class="constructor">U</span>+000<span class="constructor">D</span></code> 
+         characters (<code class="code"><span class="string">' '</span></code>, <code class="code"><span class="string">'\t'</span></code>, <code class="code"><span class="string">'\n'</span></code>, <code class="code"><span class="string">'\r'</span></code>).</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Comment</span> (<span class="keywordsign">`</span><span class="constructor">S</span>, c)</code>, representing a JavaScript single line 
+      comment <code class="code">c</code>. <code class="code">c</code> is the comment's content without the starting 
+      <code class="code">//</code> and the ending newline. The string <code class="code">c</code> must not contain any newline.
+      </li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Comment</span> (<span class="keywordsign">`</span><span class="constructor">M</span>, c)</code>, representing a JavaScript multi-line 
+      comment <code class="code">c</code>. <code class="code">c</code> is the comment's content without the starting 
+      <code class="code">/*</code> and the ending <code class="code">*/</code>. The string <code class="code">c</code> must not contain the 
+      sequence <code class="code">*/</code>. </li>
+</ul>
+
+<p>
+
+      <b>Warning.</b> <a href="Jsonm.Uncut.html#VALencode"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Uncut</span>.encode</code></a> does not check the above constraints on 
+      <code class="code">w</code> and <code class="code">c</code>.<br>
+<br>
+<span id="1_Decode"><h1>Decode</h1></span><br>
+<pre><span id="VALdecode"><span class="keyword">val</span> decode</span> : <code class="type"><a href="Jsonm.html#TYPEdecoder">Jsonm.decoder</a> -><br>       [ `Await<br>       | `Comment of [ `M | `S ] * string<br>       | `End<br>       | `Error of <a href="Jsonm.html#TYPEerror">Jsonm.error</a><br>       | `Lexeme of <a href="Jsonm.html#TYPElexeme">Jsonm.lexeme</a><br>       | `White of string ]</code></pre><div class="info">
+<code class="code">decode d</code> is like <a href="Jsonm.html#VALdecode"><code class="code"><span class="constructor">Jsonm</span>.decode</code></a> but for the 
+      <a href="Jsonm.Uncut.html#uncutdatamodel">uncut data model</a>.<br>
+</div>
+<pre><span id="VALpp_decode"><span class="keyword">val</span> pp_decode</span> : <code class="type">Format.formatter -><br>       [< `Await<br>        | `Comment of [ `M | `S ] * string<br>        | `End<br>        | `Error of <a href="Jsonm.html#TYPEerror">Jsonm.error</a><br>        | `Lexeme of <a href="Jsonm.html#TYPElexeme">Jsonm.lexeme</a><br>        | `White of string ] -><br>       unit</code></pre><div class="info">
+<code class="code">pp_decode ppf v</code> prints an unspecified representation of <code class="code">v</code> 
+      on <code class="code">ppf</code>.<br>
+</div>
+<br>
+<span id="1_Encode"><h1>Encode</h1></span><br>
+<pre><span id="VALencode"><span class="keyword">val</span> encode</span> : <code class="type"><a href="Jsonm.html#TYPEencoder">Jsonm.encoder</a> -><br>       [< `Await<br>        | `Comment of [ `M | `S ] * string<br>        | `End<br>        | `Lexeme of <a href="Jsonm.html#TYPElexeme">Jsonm.lexeme</a><br>        | `White of string ] -><br>       [ `Ok | `Partial ]</code></pre><div class="info">
+<code class="code">encode</code> is like <a href="Jsonm.html#VALencode"><code class="code"><span class="constructor">Jsonm</span>.encode</code></a> but for the <a href="Jsonm.Uncut.html#uncutdatamodel">
+      uncut data model</a>.
+<p>
+
+      <b>IMPORTANT.</b> Never encode <code class="code"><span class="keywordsign">`</span><span class="constructor">Comment</span></code> for the web, it is 
+      non-standard and breaks interoperability.<br>
+</div>
+</body></html>

@@ -1,0 +1,56 @@
+# OASIS_START
+# DO NOT EDIT (digest: 9df85013844d70e44ef2271cf5ed2ac1)
+# Ignore VCS directories, you can use the same kind of rule outside 
+# OASIS_START/STOP if you want to exclude directories that contains 
+# useless stuff for the build process
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
+# Library oUnitAdvanced
+"src/oUnitAdvanced.cmxs": use_oUnitAdvanced
+# Library oUnit
+"src/oUnit.cmxs": use_oUnit
+# Library oUnitThreads
+"src/oUnitThreads.cmxs": use_oUnitThreads
+<src/*.ml{,i}>: use_oUnit
+<src/*.ml{,i}>: use_oUnitAdvanced
+<src/*.ml{,i}>: pkg_threads
+<src/*.ml{,i}>: pkg_unix
+# Executable testFakeHTML
+"test/testFakeHTML.byte": use_oUnit
+"test/testFakeHTML.byte": use_oUnitAdvanced
+"test/testFakeHTML.byte": pkg_unix
+# Executable testFakeRunner
+"test/testFakeRunner.byte": use_oUnitThreads
+"test/testFakeRunner.byte": use_oUnit
+"test/testFakeRunner.byte": use_oUnitAdvanced
+"test/testFakeRunner.byte": pkg_threads
+"test/testFakeRunner.byte": pkg_unix
+# Executable testFakeShared
+"test/testFakeShared.byte": use_oUnitThreads
+"test/testFakeShared.byte": use_oUnit
+"test/testFakeShared.byte": use_oUnitAdvanced
+"test/testFakeShared.byte": pkg_threads
+"test/testFakeShared.byte": pkg_unix
+<test/*.ml{,i}>: use_oUnitThreads
+<test/*.ml{,i}>: pkg_threads
+# Executable test
+"test/test.byte": use_oUnit
+"test/test.byte": use_oUnitAdvanced
+"test/test.byte": pkg_str
+"test/test.byte": pkg_unix
+<test/*.ml{,i}>: use_oUnit
+<test/*.ml{,i}>: use_oUnitAdvanced
+<test/*.ml{,i}>: pkg_str
+<test/*.ml{,i}>: pkg_unix
+# OASIS_STOP
+"src/oUnit.odoc": oasis_document_api_ounit
+"src/oUnit.ml": oasis_document_api_ounit
+"src/api-ounit.docdir": oasis_document_api_ounit

@@ -1,0 +1,33 @@
+# OASIS_START
+# DO NOT EDIT (digest: 5b7d5e7d158a90a6530a31d7d8ae2214)
+version = "0.1"
+description = "SX client"
+requires = "netclient threads jsonm cryptokit"
+archive(byte) = "sxclient.cma"
+archive(byte, plugin) = "sxclient.cma"
+archive(native) = "sxclient.cmxa"
+archive(native, plugin) = "sxclient.cmxs"
+exists_if = "sxclient.cma"
+package "thread" (
+ version = "0.1"
+ description = "SX client"
+ requires = "sxclient threads"
+ archive(byte) = "sxclient.thread.cma"
+ archive(byte, plugin) = "sxclient.thread.cma"
+ archive(native) = "sxclient.thread.cmxa"
+ archive(native, plugin) = "sxclient.thread.cmxs"
+ exists_if = "sxclient.thread.cma"
+)
+
+package "lwt" (
+ version = "0.1"
+ description = "SX client"
+ requires = "sxclient lwt.unix"
+ archive(byte) = "sxclient.lwt.cma"
+ archive(byte, plugin) = "sxclient.lwt.cma"
+ archive(native) = "sxclient.lwt.cmxa"
+ archive(native, plugin) = "sxclient.lwt.cmxs"
+ exists_if = "sxclient.lwt.cma"
+)
+# OASIS_STOP
+

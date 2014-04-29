@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="next" href="Jsonm.Uncut.html">
+<link rel="Up" href="Jsonm.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Jsonm" rel="Chapter" href="Jsonm.html"><title>Jsonm.Manual</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="Jsonm.html" title="Jsonm">Up</a>
+&nbsp;<a class="post" href="Jsonm.Uncut.html" title="Jsonm.Uncut">Next</a>
+</div>
+<h1>Module <a href="type_Jsonm.Manual.html">Jsonm.Manual</a></h1>
+<pre><span class="keyword">module</span> Manual: <code class="code"><span class="keyword">sig</span></code> <a href="Jsonm.Manual.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>Manual input sources and output destinations. 
+<p>
+
+    <b>Warning.</b> Use only with <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> decoders and encoders.<br>
+<hr width="100%">
+<pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type"><a href="Jsonm.html#TYPEdecoder">Jsonm.decoder</a> -> string -> int -> int -> unit</code></pre><div class="info">
+<code class="code">src d s j l</code> provides <code class="code">d</code> with <code class="code">l</code> bytes to read, starting 
+      at <code class="code">j</code> in <code class="code">s</code>. This byte range is read by calls to <a href="Jsonm.html#VALdecode"><code class="code"><span class="constructor">Jsonm</span>.decode</code></a> until 
+      <code class="code"><span class="keywordsign">`</span><span class="constructor">Await</span></code> is returned. To signal the end of input call the function
+      with <code class="code">l = 0</code>.<br>
+</div>
+<pre><span id="VALdst"><span class="keyword">val</span> dst</span> : <code class="type"><a href="Jsonm.html#TYPEencoder">Jsonm.encoder</a> -> string -> int -> int -> unit</code></pre><div class="info">
+<code class="code">dst e s j l</code> provides <code class="code">e</code> with <code class="code">l</code> bytes to write, starting
+      at <code class="code">j</code> in <code class="code">s</code>. This byte rang is written by calls to <a href="Jsonm.html#VALencode"><code class="code"><span class="constructor">Jsonm</span>.encode</code></a> with <code class="code">e</code>
+      until <code class="code"><span class="keywordsign">`</span><span class="constructor">Partial</span></code> is returned. Use <a href="Jsonm.Manual.html#VALdst_rem"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.dst_rem</code></a> to know the remaining
+      number of non-written free bytes in <code class="code">s</code>.<br>
+</div>
+<pre><span id="VALdst_rem"><span class="keyword">val</span> dst_rem</span> : <code class="type"><a href="Jsonm.html#TYPEencoder">Jsonm.encoder</a> -> int</code></pre><div class="info">
+<code class="code">dst_rem e</code> is the remaining number of non-written, free bytes
+      in the last buffer provided with <a href="Jsonm.Manual.html#VALdst"><code class="code"><span class="constructor">Jsonm</span>.<span class="constructor">Manual</span>.dst</code></a>.<br>
+</div>
+</body></html>

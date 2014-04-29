@@ -1,0 +1,16 @@
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+"3rdparty": -traverse
+"3rdparty": not_hygienic
+"pkg-debian": -traverse
+"pkg-debian": not_hygienic
+"pkg-lsb": not_hygienic
+"pkg-lsb": -traverse
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic

@@ -1,0 +1,12 @@
+# OASIS_START
+# DO NOT EDIT (digest: e46c100ba3e7e28ea1b332d33d498d05)
+version = "0.1"
+description = "SX client"
+requires = "sxclient lwt.unix"
+archive(byte) = "sxclient_lwt.cma"
+archive(byte, plugin) = "sxclient_lwt.cma"
+archive(native) = "sxclient_lwt.cmxa"
+archive(native, plugin) = "sxclient_lwt.cmxs"
+exists_if = "sxclient_lwt.cma"
+# OASIS_STOP
+

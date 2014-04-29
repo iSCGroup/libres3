@@ -1,0 +1,32 @@
+# OASIS_START
+# DO NOT EDIT (digest: ec034dc2b5280f95f8153b873aff4953)
+version = "2.0.0"
+description = "Unit testing framework"
+requires = "unix oUnit.advanced"
+archive(byte) = "oUnit.cma"
+archive(byte, plugin) = "oUnit.cma"
+archive(native) = "oUnit.cmxa"
+archive(native, plugin) = "oUnit.cmxs"
+exists_if = "oUnit.cma"
+package "threads" (
+ version = "2.0.0"
+ description = "Unit testing framework"
+ requires = "threads oUnit"
+ archive(byte) = "oUnitThreads.cma"
+ archive(byte, plugin) = "oUnitThreads.cma"
+ archive(native) = "oUnitThreads.cmxa"
+ archive(native, plugin) = "oUnitThreads.cmxs"
+ exists_if = "oUnitThreads.cma"
+)
+
+package "advanced" (
+ version = "2.0.0"
+ description = "Unit testing framework"
+ archive(byte) = "oUnitAdvanced.cma"
+ archive(byte, plugin) = "oUnitAdvanced.cma"
+ archive(native) = "oUnitAdvanced.cmxa"
+ archive(native, plugin) = "oUnitAdvanced.cmxs"
+ exists_if = "oUnitAdvanced.cma"
+)
+# OASIS_STOP
+

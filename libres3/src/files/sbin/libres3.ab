@@ -1,0 +1,106 @@
+#!/bin/sh
+# (C) Copyright 2013-present, Skylable Ltd. <info-copyright@skylable.com>
+# All Rights Reserved.
+
+ETCDIR="$(sysconfdir)"
+LOGDIR="$(localstatedir)/log/libres3"
+VARLIBDIR="$(localstatedir)/lib/libres3"
+CONFIG="\$ETCDIR/libres3/libres3.conf"
+if [ ! -f "\$CONFIG" ]; then
+    echo "Not configured. You have to run $(sbindir)/libres3_setup first."
+    exit 1
+fi
+
+. \$CONFIG
+
+umask 027
+export OCAMLFIND_CONF="\$ETCDIR/libres3/findlib.conf"
+touch \$OCAMLFIND_CONF
+
+exit_if_running() {
+    if [ -r "\$2" ]; then
+        PID=`cat \$2`;
+        if kill -0 \$PID 2>/dev/null; then
+            echo "\$1 is already running (PID \$PID)!" >&2
+            echo "Please run \$0 stop/restart to stop or restart existing services."
+            exit 1
+        fi
+    fi
+}
+
+test_running() {
+    if [ -r "\$2" ]; then
+        PID=`cat \$2`;
+        if kill -0 \$PID 2>/dev/null; then
+            echo "\$1 is running (PID \$PID)"
+        else
+            echo "\$1 is NOT running"
+        fi
+    else
+        echo "\$1 is NOT running"
+    fi
+}
+
+wait_pids() {
+    for pid in \$PIDS; do
+        while kill -0 \$pid 2>/dev/null; do
+            sleep 1
+        done
+    done
+}
+
+case "\$1" in
+    start)
+        RUNDIR=`dirname "\$pid_file"`
+        mkdir -p "\$RUNDIR" "\$LOGDIR" "\$VARLIBDIR"
+        chown "\$user:\$group" "\$LOGDIR" "\$RUNDIR" "\$VARLIBDIR"
+        umask 022
+        chmod o+rx "$(localstatedir)" "$(localstatedir)/lib" "$(localstatedir)/lib/libres3"
+        umask 027
+        exit_if_running "libres3" "\$pid_file"
+        echo "Starting LibreS3"
+        if ! $(sbindir)/libres3_ocsigen --nofork & >>"\$LOGDIR/info.log"; then
+#        if ! $(sbindir)/libres3_ocsigen --no-ssl >>"\$LOGDIR/info.log"; then
+           echo "ERROR: Failed to start libres3. Please check the log file \$LOGDIR/info.log"
+           exit 1
+        fi
+        echo "LibreS3 started successfully"
+        ;;
+
+    stop)
+        PIDS=
+        if [ -r "\$pid_file" ]; then
+                PID=`cat "\$pid_file"`
+                echo "Sending SIGTERM to \$PID"
+                kill \$PID 2>/dev/null
+                PIDS="\$PIDS \$PID"
+        fi
+        if [ -n "\$PIDS" ]; then
+            echo "Waiting for \$PIDS"
+            wait_pids
+        fi
+        if [ -r \$pid_file ]; then
+          rm \$pid_file
+        fi
+        ;;
+
+    restart)
+        \$0 stop || exit 1
+        \$0 start || exit 1
+        ;;
+
+    status)
+        echo "--- LibreS3 STATUS ---"
+        test_running "libres3" "\$pid_file"
+
+        echo
+        echo "--- LibreS3 INFO ---"
+        test -n "\$s3_ssl_privatekey_file" && echo "SSL private key: \$s3_ssl_privatekey_file"
+        echo "LibreS3 logfiles: \$LOGDIR"
+        ;;
+
+    *)
+        echo "Usage: \$0 <start | stop | restart | status>" >&2
+        exit 1
+        ;;
+esac

@@ -1,0 +1,225 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Uutf" rel="Chapter" href="Uutf.html"><title>Index of values</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Index of values</h1>
+<table>
+<tr><td align="left"><br>A</td></tr>
+<tr><td><a href="Uutf.Buffer.html#VALadd_utf_16be">add_utf_16be</a> [<a href="Uutf.Buffer.html">Uutf.Buffer</a>]</td>
+<td><div class="info">
+<code class="code">add_utf_16be b u</code> adds the UTF-16BE encoding of the
+      <a href="http://unicode.org/glossary/#unicode_scalar_value"> unicode
+      scalar value</a> <code class="code">u</code> to <code class="code">b</code>.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.Buffer.html#VALadd_utf_16le">add_utf_16le</a> [<a href="Uutf.Buffer.html">Uutf.Buffer</a>]</td>
+<td><div class="info">
+<code class="code">add_utf_16le b u</code> adds the UTF-16LE encoding of the
+      <a href="http://unicode.org/glossary/#unicode_scalar_value"> unicode
+      scalar value</a> <code class="code">u</code> to <code class="code">b</code>.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.Buffer.html#VALadd_utf_8">add_utf_8</a> [<a href="Uutf.Buffer.html">Uutf.Buffer</a>]</td>
+<td><div class="info">
+<code class="code">add_utf_8 b u</code> adds the UTF-8 encoding of the
+      <a href="http://unicode.org/glossary/#unicode_scalar_value"> unicode
+      scalar value</a> <code class="code">u</code> to <code class="code">b</code>.
+</div>
+</td></tr>
+<tr><td align="left"><br>C</td></tr>
+<tr><td><a href="Uutf.html#VALcp_to_string">cp_to_string</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">cp_to_string cp</code> represents the
+    <a href="http://unicode.org/glossary/#code_point">code point</a> <code class="code">cp</code> in
+    ASCII according to the Unicode notational convention
+    (see Appendix A in Unicode 6.1.0).
+</div>
+</td></tr>
+<tr><td align="left"><br>D</td></tr>
+<tr><td><a href="Uutf.html#VALdecode">decode</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">decode d</code> is:
+     <code class="code"><span class="keywordsign">`</span><span class="constructor">Await</span></code> if <code class="code">d</code> has a <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> input source and awaits 
+       for more input. The client must use <a href="Uutf.Manual.html#VALsrc"><code class="code"><span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.src</code></a> to provide it., <code class="code"><span class="keywordsign">`</span><span class="constructor">Uchar</span> u</code> if a Unicode scalar value <code class="code">u</code> was decoded., <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code> if the end of input was reached., <code class="code"><span class="keywordsign">`</span><span class="constructor">Malformed</span> bytes</code> if the <code class="code">bytes</code> sequence is malformed according to 
+       the decoded encoding scheme. If you are interested in a best-effort
+       decoding you can still continue to decode after an error until the
+       decoder synchronizes again on valid bytes. It may however be a good
+       idea to signal the malformed characters by adding an <a href="Uutf.html#VALu_rep"><code class="code"><span class="constructor">Uutf</span>.u_rep</code></a>
+       character to the parsed data, see the <a href="#examples">examples</a>. 
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALdecoder">decoder</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">decoder nln encoding src</code> is a decoder that inputs from <code class="code">src</code>.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALdecoder_col">decoder_col</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">decoder_col d</code> is the column number of the last decoded 
+    (or malformed) character.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALdecoder_count">decoder_count</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">decoder_count d</code> is the number of characters already decoded on <code class="code">d</code>
+    (including malformed ones).
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALdecoder_encoding">decoder_encoding</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">decoder_encoding d</code> is <code class="code">d</code>'s the decoded encoding scheme of <code class="code">d</code>.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALdecoder_line">decoder_line</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">decoder_line d</code> is the line number of the last
+    decoded (or malformed) character.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALdecoder_nln">decoder_nln</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">decoder_nln d</code> returns <code class="code">d</code>'s newline normalization (if any).
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALdecoder_removed_bom">decoder_removed_bom</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">decoder_removed_bom d</code> is <code class="code"><span class="keyword">true</span></code> iff an <em>initial</em>
+    <a href="http://unicode.org/glossary/#byte_order_mark">BOM</a> was
+    removed from the input stream.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALdecoder_src">decoder_src</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">decoder_src d</code> is <code class="code">d</code>'s input source.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.Manual.html#VALdst">dst</a> [<a href="Uutf.Manual.html">Uutf.Manual</a>]</td>
+<td><div class="info">
+<code class="code">dst e s j l</code> provides <code class="code">e</code> with <code class="code">l</code> bytes to write, starting
+      at <code class="code">j</code> in <code class="code">s</code>.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.Manual.html#VALdst_rem">dst_rem</a> [<a href="Uutf.Manual.html">Uutf.Manual</a>]</td>
+<td><div class="info">
+<code class="code">dst_rem e</code> is the remaining number of non-written, free bytes
+      in the last buffer provided with <a href="Uutf.Manual.html#VALdst"><code class="code"><span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.dst</code></a>.
+</div>
+</td></tr>
+<tr><td align="left"><br>E</td></tr>
+<tr><td><a href="Uutf.html#VALencode">encode</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">encode e v</code> is :
+     <code class="code"><span class="keywordsign">`</span><span class="constructor">Partial</span></code> iff <code class="code">e</code> has a <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> destination and needs more output
+       storage. The client must use <a href="Uutf.Manual.html#VALdst"><code class="code"><span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.dst</code></a> to provide a new buffer
+       and then call <a href="Uutf.html#VALencode"><code class="code"><span class="constructor">Uutf</span>.encode</code></a> with <code class="code"><span class="keywordsign">`</span><span class="constructor">Await</span></code> until <code class="code"><span class="keywordsign">`</span><span class="constructor">Ok</span></code> is returned., <code class="code"><span class="keywordsign">`</span><span class="constructor">Ok</span></code> when the encoder is ready to encode a new <code class="code"><span class="keywordsign">`</span><span class="constructor">Uchar</span></code> or <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code>
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALencoder">encoder</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">encoder encoding dst</code> is an encoder for <code class="code">encoding</code> that outputs
+    to <code class="code">dst</code>.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALencoder_dst">encoder_dst</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">encoder_dst e</code> is <code class="code">e</code>'s output destination.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALencoder_encoding">encoder_encoding</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">encoder_encoding e</code> is <code class="code">e</code>'s encoding.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.String.html#VALencoding_guess">encoding_guess</a> [<a href="Uutf.String.html">Uutf.String</a>]</td>
+<td><div class="info">
+<code class="code">encoding_guess s</code> is the encoding guessed for <code class="code">s</code> coupled with 
+      <code class="code"><span class="keyword">true</span></code> iff there's an initial 
+      <a href="http://unicode.org/glossary/#byte_order_mark">BOM</a>.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALencoding_of_string">encoding_of_string</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">encoding_of_string s</code> converts a (case insensitive)
+    <a href="http://www.iana.org/assignments/character-sets">IANA character set name</a>
+    to an encoding.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALencoding_to_string">encoding_to_string</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">encoding_to_string e</code> is a
+    <a href="http://www.iana.org/assignments/character-sets">IANA character set name</a>
+    for <code class="code">e</code>.
+</div>
+</td></tr>
+<tr><td align="left"><br>F</td></tr>
+<tr><td><a href="Uutf.String.html#VALfold_utf_16be">fold_utf_16be</a> [<a href="Uutf.String.html">Uutf.String</a>]</td>
+<td><div class="info">
+<code class="code">fold_utf_16be f a s</code> is 
+      <code class="code">f (</code> ...
+</div>
+</td></tr>
+<tr><td><a href="Uutf.String.html#VALfold_utf_16le">fold_utf_16le</a> [<a href="Uutf.String.html">Uutf.String</a>]</td>
+<td><div class="info">
+<code class="code">fold_utf_16le f a s</code> is 
+      <code class="code">f (</code> ...
+</div>
+</td></tr>
+<tr><td><a href="Uutf.String.html#VALfold_utf_8">fold_utf_8</a> [<a href="Uutf.String.html">Uutf.String</a>]</td>
+<td><div class="info">
+<code class="code">fold_utf_8 f a s</code> is 
+      <code class="code">f (</code> ...
+</div>
+</td></tr>
+<tr><td align="left"><br>I</td></tr>
+<tr><td><a href="Uutf.html#VALis_uchar">is_uchar</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">is_uchar cp</code> is <code class="code"><span class="keyword">true</span></code> iff <code class="code">cp</code> is a Unicode
+    <a href="http://unicode.org/glossary/#unicode_scalar_value">
+    scalar value</a>.
+</div>
+</td></tr>
+<tr><td align="left"><br>P</td></tr>
+<tr><td><a href="Uutf.html#VALpp_cp">pp_cp</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">pp_cp ppf cp</code> prints <code class="code">cp</code> on <code class="code">ppf</code>.
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALpp_decode">pp_decode</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">pp_decode ppf v</code> prints an unspecified representation of <code class="code">v</code> on
+    <code class="code">ppf</code>.
+</div>
+</td></tr>
+<tr><td align="left"><br>S</td></tr>
+<tr><td><a href="Uutf.Manual.html#VALsrc">src</a> [<a href="Uutf.Manual.html">Uutf.Manual</a>]</td>
+<td><div class="info">
+<code class="code">src d s j l</code> provides <code class="code">d</code> with <code class="code">l</code> bytes to read, starting at 
+      <code class="code">j</code> in <code class="code">s</code>.
+</div>
+</td></tr>
+<tr><td align="left"><br>U</td></tr>
+<tr><td><a href="Uutf.html#VALu_bom">u_bom</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">u_bom</code> is the <a href="http://unicode.org/glossary/#byte_order_mark">byte
+    order mark</a> (BOM) character (<code class="code"><span class="constructor">U</span>+<span class="constructor">FEFF</span></code>).
+</div>
+</td></tr>
+<tr><td><a href="Uutf.html#VALu_rep">u_rep</a> [<a href="Uutf.html">Uutf</a>]</td>
+<td><div class="info">
+<code class="code">u_rep</code> is the
+    <a href="http://unicode.org/glossary/#replacement_character">replacement</a> 
+    character (<code class="code"><span class="constructor">U</span>+<span class="constructor">FFFD</span></code>).
+</div>
+</td></tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,12 @@
+(* OASIS_START *)
+(* DO NOT EDIT (digest: dea20120fdd3b1b8f357e811bbda12c1) *)
+
+Authors of libres3:
+
+* edwin@skylable.com
+
+Current maintainers of libres3:
+
+* Skylable Dev Team <dev-team@skylable.com>
+
+(* OASIS_STOP *)

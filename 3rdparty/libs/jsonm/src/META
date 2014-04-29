@@ -1,0 +1,12 @@
+# OASIS_START
+# DO NOT EDIT (digest: 0e79d1afefe3ab546b86a338e9656203)
+version = "0.9.1"
+description = "Non-blocking streaming JSON codec for OCaml"
+requires = "uutf"
+archive(byte) = "jsonm.cma"
+archive(byte, plugin) = "jsonm.cma"
+archive(native) = "jsonm.cmxa"
+archive(native, plugin) = "jsonm.cmxs"
+exists_if = "jsonm.cma"
+# OASIS_STOP
+

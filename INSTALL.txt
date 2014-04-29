@@ -1,0 +1,40 @@
+Dependencies
+============
+
+In order to compile this package, it is required to install:
+ * the OCaml compiler, version >= 3.12.0 (ocaml-native-compilers or ocaml package)
+    * Note: not all OSes provide OCaml in the official repositories, you may have to use 3rdparty repositories, or build OCaml from sources
+ * camlp4 (OS package usually called camlp4-extra, or ocaml-camlp4)
+ * PCRE library (libpcre3-dev)
+ * OpenSSL library (libssl-dev)
+ * GNU Make
+
+Optional dependencies (provided in 3rdparty/libs and automatically built):
+  * ocamlfind/findlib (>= 1.2.8)
+  * ocaml-ssl
+  * cryptokit
+  * ocamlnet (> 3.7.3), built with SSL
+  * lwt (>= 2.4.2), built with SSL
+  * jsonm
+  * xmlm
+  * uutfm
+  * pcre-ocaml (required by ocsigenserver)
+  * react (required by ocsigenserver)
+  * tyxml (required by ocsigenserver)
+  * ocsigenserver (>= 2.4.0)
+  * oUnit
+
+Installing
+==========
+
+1. Uncompress the source archive and go to the root of the package
+2. Run './configure'
+3. Run 'make'
+4. Run 'make install'
+
+Uninstalling
+============
+
+1. Go to the root of the package
+2. Run 'make uninstall'
+

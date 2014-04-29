@@ -1,0 +1,40 @@
+# OASIS_START
+# DO NOT EDIT (digest: 54c93e7fcddb1aaab3479ba2cdfacd4e)
+# Ignore VCS directories, you can use the same kind of rule outside 
+# OASIS_START/STOP if you want to exclude directories that contains 
+# useless stuff for the build process
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
+# Library jsonm
+"src/jsonm.cmxs": use_jsonm
+<src/*.ml{,i}>: pkg_uutf
+# Executable jsontrip
+<test/jsontrip.{native,byte}>: use_jsonm
+<test/jsontrip.{native,byte}>: pkg_unix
+<test/jsontrip.{native,byte}>: pkg_uutf
+# Executable ocamltweets
+<test/ocamltweets.{native,byte}>: use_jsonm
+<test/ocamltweets.{native,byte}>: pkg_unix
+<test/ocamltweets.{native,byte}>: pkg_uutf
+# Executable test
+<test/test.{native,byte}>: use_jsonm
+<test/test.{native,byte}>: pkg_uutf
+# Executable jtree
+<test/jtree.{native,byte}>: use_jsonm
+<test/jtree.{native,byte}>: pkg_uutf
+# Executable examples
+<test/examples.{native,byte}>: use_jsonm
+<test/examples.{native,byte}>: pkg_unix
+<test/examples.{native,byte}>: pkg_uutf
+<test/*.ml{,i}>: use_jsonm
+<test/*.ml{,i}>: pkg_unix
+<test/*.ml{,i}>: pkg_uutf
+# OASIS_STOP

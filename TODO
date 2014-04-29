@@ -1,0 +1,56 @@
+Important
+=====
+    * proxy_host support
+    * test with dragondisk
+    * support/test retries, SX node down, etc.
+    * support SSL between LibreS3 and SX
+
+Code cleanup
+============
+    * drop File backend, add a Mem backend instead - better for testing as some
+    code was there only to make file backend atomic
+    * drop async json parsing: we get the entire body at once now, so we can simplify parsing
+    * should we keep existing build system or use opam?
+    * check test coverage with OCaml bisect
+    * check coding style with Mascot
+    * move URL related code to a separate module
+    * see if we can integrate ocamlnet's pipeline with lwt better and drop the extra thread
+    * review all code, document failure conditions, add more error checking code
+
+Tests
+======
+    * should have tests for SX <-> libres3 retries
+    * need to inject failures: a mock SX server to be used for testing that can
+    simulate the failures (can be a simple pass-through proxy to the real SX
+    server, and simulate failures according to a script)
+    * should have tests for large files
+    * automated package testing
+
+Performance
+===========
+    * start uploading partial files sooner
+
+Known issues
+============
+    * configure: should check for presence of Zlib headers (needed by cryptokit)
+    * check: does ocamlnet need -enable-crypto to process http deflate?
+    * on SIGUSR1 it fails if libres3-gc.log doesn't exist: should get created
+    automatically, or use syslog for it
+    * CentOS has a default firewall that blocks everything but ssh, have to add
+ firewall rules or flush firewall to allow libres3 to be reachable from other
+ hosts
+    * permissions on libres3.conf should be 600 in rpm
+    * version number in rpm name
+    * rpm should be signed?
+    * make install fails with 'Text file busy' if libres3_ocsigen is already running
+
+User friendliness
+=================
+
+    * on bad/unreachable sx_host we should have better error messages
+    * netTest.native: better error messages when SX / libres3 is not reachable
+    * more friendly message when SSL certificate is configured but missing
+    * see if we can detect SSL port mismatches (i.e. https traffic on non-https
+                                                * port and viceversa)
+    * create sample config for https too
+

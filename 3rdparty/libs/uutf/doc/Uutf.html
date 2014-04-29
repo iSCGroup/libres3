@@ -1,0 +1,484 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Uutf" rel="Chapter" href="Uutf.html"><link title="Unicode characters" rel="Section" href="#basic">
+<link title="Unicode encoding schemes" rel="Section" href="#schemes">
+<link title="Decode" rel="Section" href="#decode">
+<link title="Encode" rel="Section" href="#encode">
+<link title="Manual sources and destinations." rel="Section" href="#manual">
+<link title="String folders and Buffer encoders" rel="Section" href="#strbuf">
+<link title="Examples" rel="Section" href="#examples">
+<link title="Read lines" rel="Subsection" href="#readlines">
+<link title="Recode" rel="Subsection" href="#recode">
+<title>Uutf</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_Uutf.html">Uutf</a></h1>
+<pre><span class="keyword">module</span> Uutf: <code class="code"><span class="keyword">sig</span></code> <a href="Uutf.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+Non-blocking streaming Unicode codec.
+<p>
+
+  <code class="code"><span class="constructor">Uutf</span></code> is a non-blocking streaming codec to <a href="#decode">decode</a> and
+  <a href="#encode">encode</a> the <a href="http://www.ietf.org/rfc/rfc3629.txt">
+  UTF-8</a>, <a href="http://www.ietf.org/rfc/rfc2781.txt"> UTF-16</a>, UTF-16LE
+  and UTF-16BE encoding schemes. It can efficiently work character by
+  character without blocking on IO. Decoders perform 
+  character position tracking and support <a href="Uutf.html#TYPEnln">newline normalization</a>.
+<p>
+
+  Functions are also provided to <a href="Uutf.String.html"> fold over</a> the
+  characters of UTF encoded OCaml string values and to
+  <a href="Uutf.Buffer.html">directly encode</a> characters in OCaml <code class="code"><span class="constructor">Buffer</span>.t</code>
+  values.
+<p>
+
+  See <a href="#examples">examples</a> of use.
+<p>
+
+  <em>Release 0.9.3 - Daniel Bünzli &lt;daniel.buenzl i@erratique.ch&gt; </em>
+<p>
+
+  <h3 id="3_References">References</h3>
+    <ul>
+<li>The Unicode Consortium. 
+    <em><a href="http://www.unicode.org/versions/latest">The Unicode Standard</a></em>. 
+    (latest version)</li>
+</ul>
+<br>
+</div>
+<hr width="100%">
+<br>
+<h1 id="basic">Unicode characters</h1> 
+<p>
+
+      <code class="code"><span class="constructor">Uutf</span></code> uses the term character for a Unicode
+      <a href="http://unicode.org/glossary/#unicode_scalar_value"> scalar
+      value</a> which is an integer value in the ranges <code class="code">0x0000</code>
+      ... <code class="code">0xD7FF</code> and <code class="code">0xE000</code> ... <code class="code">0x10FFFF</code>. This should not be
+      confused with a Unicode
+      <a href="http://unicode.org/glossary/#code_point">code point</a>, which is
+      a scalar value or a (textually meaningless)
+      <a href="http://unicode.org/glossary/#surrogate_code_point">surrogate
+      code point</a>.<br>
+<pre><span id="TYPEuchar"><span class="keyword">type</span> <code class="type"></code>uchar</span> = <code class="type">int</code> </pre>
+<div class="info">
+The type for Unicode characters. Any value of this type returned
+    by <code class="code"><span class="constructor">Uutf</span></code> is a Unicode 
+    <a href="http://unicode.org/glossary/#unicode_scalar_value">
+    scalar value</a>.<br>
+</div>
+
+<pre><span id="VALu_bom"><span class="keyword">val</span> u_bom</span> : <code class="type"><a href="Uutf.html#TYPEuchar">uchar</a></code></pre><div class="info">
+<code class="code">u_bom</code> is the <a href="http://unicode.org/glossary/#byte_order_mark">byte
+    order mark</a> (BOM) character (<code class="code"><span class="constructor">U</span>+<span class="constructor">FEFF</span></code>).<br>
+</div>
+<pre><span id="VALu_rep"><span class="keyword">val</span> u_rep</span> : <code class="type"><a href="Uutf.html#TYPEuchar">uchar</a></code></pre><div class="info">
+<code class="code">u_rep</code> is the
+    <a href="http://unicode.org/glossary/#replacement_character">replacement</a> 
+    character (<code class="code"><span class="constructor">U</span>+<span class="constructor">FFFD</span></code>).<br>
+</div>
+<pre><span id="VALis_uchar"><span class="keyword">val</span> is_uchar</span> : <code class="type">int -> bool</code></pre><div class="info">
+<code class="code">is_uchar cp</code> is <code class="code"><span class="keyword">true</span></code> iff <code class="code">cp</code> is a Unicode
+    <a href="http://unicode.org/glossary/#unicode_scalar_value">
+    scalar value</a>.<br>
+</div>
+<pre><span id="VALcp_to_string"><span class="keyword">val</span> cp_to_string</span> : <code class="type">int -> string</code></pre><div class="info">
+<code class="code">cp_to_string cp</code> represents the
+    <a href="http://unicode.org/glossary/#code_point">code point</a> <code class="code">cp</code> in
+    ASCII according to the Unicode notational convention
+    (see Appendix A in Unicode 6.1.0).
+    If <code class="code">cp</code> is not a valid code point <code class="code"><span class="string">"U+Invalid(X)"</span></code> is
+    returned where <code class="code"><span class="constructor">X</span></code> is the hexadecimal integer value.
+<p>
+
+    <b>Warning.</b> Not thread safe. Use <a href="Uutf.html#VALpp_cp"><code class="code"><span class="constructor">Uutf</span>.pp_cp</code></a> for thread safety.<br>
+</div>
+<pre><span id="VALpp_cp"><span class="keyword">val</span> pp_cp</span> : <code class="type">Format.formatter -> int -> unit</code></pre><div class="info">
+<code class="code">pp_cp ppf cp</code> prints <code class="code">cp</code> on <code class="code">ppf</code>. See <a href="Uutf.html#VALcp_to_string"><code class="code"><span class="constructor">Uutf</span>.cp_to_string</code></a>.<br>
+</div>
+<br>
+<h1 id="schemes">Unicode encoding schemes</h1><br>
+<pre><span id="TYPEencoding"><span class="keyword">type</span> <code class="type"></code>encoding</span> = <code class="type">[ `UTF_16 | `UTF_16BE | `UTF_16LE | `UTF_8 ]</code> </pre>
+<div class="info">
+The type for Unicode
+    <a href="http://unicode.org/glossary/#character_encoding_scheme">encoding
+    schemes</a>.<br>
+</div>
+
+<pre><span id="TYPEdecoder_encoding"><span class="keyword">type</span> <code class="type"></code>decoder_encoding</span> = <code class="type">[ `ISO_8859_1 | `US_ASCII | `UTF_16 | `UTF_16BE | `UTF_16LE | `UTF_8 ]</code> </pre>
+<div class="info">
+The type for encoding schemes <em>decoded</em> by <code class="code"><span class="constructor">Uutf</span></code>. Unicode encoding 
+    schemes plus <a href="http://tools.ietf.org/html/rfc20">US-ASCII</a> and 
+    <a href="http://www.ecma-international.org/publications/standards/Ecma-094.htm">
+    ISO/IEC 8859-1</a> (latin-1).<br>
+</div>
+
+<pre><span id="VALencoding_of_string"><span class="keyword">val</span> encoding_of_string</span> : <code class="type">string -> <a href="Uutf.html#TYPEdecoder_encoding">decoder_encoding</a> option</code></pre><div class="info">
+<code class="code">encoding_of_string s</code> converts a (case insensitive)
+    <a href="http://www.iana.org/assignments/character-sets">IANA character set name</a>
+    to an encoding.<br>
+</div>
+<pre><span id="VALencoding_to_string"><span class="keyword">val</span> encoding_to_string</span> : <code class="type">[< <a href="Uutf.html#TYPEdecoder_encoding">decoder_encoding</a> ] -> string</code></pre><div class="info">
+<code class="code">encoding_to_string e</code> is a
+    <a href="http://www.iana.org/assignments/character-sets">IANA character set name</a>
+    for <code class="code">e</code>.<br>
+</div>
+<br>
+<h1 id="decode">Decode</h1><br>
+<pre><span id="TYPEsrc"><span class="keyword">type</span> <code class="type"></code>src</span> = <code class="type">[ `Channel of Pervasives.in_channel | `Manual | `String of string ]</code> </pre>
+<div class="info">
+The type for input sources. With a <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> source the client 
+    must provide input with <a href="Uutf.Manual.html#VALsrc"><code class="code"><span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.src</code></a>.<br>
+</div>
+
+<pre><span id="TYPEnln"><span class="keyword">type</span> <code class="type"></code>nln</span> = <code class="type">[ `ASCII of <a href="Uutf.html#TYPEuchar">uchar</a> | `NLF of <a href="Uutf.html#TYPEuchar">uchar</a> | `Readline of <a href="Uutf.html#TYPEuchar">uchar</a> ]</code> </pre>
+<div class="info">
+The type for newline normalizations. The variant argument is the 
+    normalization character.
+    <ul>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">ASCII</span></code>, normalizes CR (<code class="code"><span class="constructor">U</span>+000<span class="constructor">D</span></code>), LF (<code class="code"><span class="constructor">U</span>+000<span class="constructor">A</span></code>) and CRLF
+       (&lt;<code class="code"><span class="constructor">U</span>+000<span class="constructor">D</span></code>, <code class="code"><span class="constructor">U</span>+000<span class="constructor">A</span></code>&gt;).</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">NLF</span></code>, normalizes the Unicode newline function (NLF). This is
+       NEL (<code class="code"><span class="constructor">U</span>+0085</code>) and the normalizations of <code class="code"><span class="keywordsign">`</span><span class="constructor">ASCII</span></code>.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Readline</span></code>, normalizes for a Unicode readline function. This is FF
+       (<code class="code"><span class="constructor">U</span>+000<span class="constructor">C</span></code>), LS (<code class="code"><span class="constructor">U</span>+2028</code>), PS (<code class="code"><span class="constructor">U</span>+2029</code>), and the normalizations 
+       of <code class="code"><span class="keywordsign">`</span><span class="constructor">NLF</span></code>.</li>
+</ul>
+
+    Used with an appropriate normalization character the <code class="code"><span class="keywordsign">`</span><span class="constructor">NLF</span></code> and 
+    <code class="code"><span class="keywordsign">`</span><span class="constructor">Readline</span></code> normalizations allow to implement all the different 
+    recommendations of Unicode's newline guidelines (section 5.8 in 
+    Unicode 6.1.0).<br>
+</div>
+
+<pre><span id="TYPEdecoder"><span class="keyword">type</span> <code class="type"></code>decoder</span> </pre>
+<div class="info">
+The type for decoders.<br>
+</div>
+
+<pre><span id="VALdecoder"><span class="keyword">val</span> decoder</span> : <code class="type">?nln:[< <a href="Uutf.html#TYPEnln">nln</a> ] -><br>       ?encoding:[< <a href="Uutf.html#TYPEdecoder_encoding">decoder_encoding</a> ] -> [< <a href="Uutf.html#TYPEsrc">src</a> ] -> <a href="Uutf.html#TYPEdecoder">decoder</a></code></pre><div class="info">
+<code class="code">decoder nln encoding src</code> is a decoder that inputs from <code class="code">src</code>.
+<p>
+
+    <b>Byte order mark.</b>
+    <a href="http://unicode.org/glossary/#byte_order_mark">Byte order mark</a>
+    (BOM) constraints are application dependent and prone to
+    misunderstandings (see the
+    <a href="http://www.unicode.org/faq/utf_bom.html#BOM">FAQ</a>). Hence,
+    <code class="code"><span class="constructor">Uutf</span></code> decoders have a simple rule: an <em>initial BOM is always
+    removed from the input and not counted in character position
+    tracking</em>. The function <a href="Uutf.html#VALdecoder_removed_bom"><code class="code"><span class="constructor">Uutf</span>.decoder_removed_bom</code></a> does however return
+    <code class="code"><span class="keyword">true</span></code> if a BOM was removed so that all the information can be
+    recovered if needed.
+<p>
+
+    For UTF-16BE and UTF-16LE the above rule is a violation of
+    conformance D96 and D97 of the standard. <code class="code"><span class="constructor">Uutf</span></code> favors the idea
+    that if there's a BOM, decoding with <code class="code"><span class="keywordsign">`</span><span class="constructor">UTF_16</span></code> or the <code class="code"><span class="keywordsign">`</span><span class="constructor">UTF_16XX</span></code>
+    corresponding to the BOM should decode the same character sequence
+    (this is not the case if you stick to the standard). The client
+    can however regain conformance by consulting the result of
+    <a href="Uutf.html#VALdecoder_removed_bom"><code class="code"><span class="constructor">Uutf</span>.decoder_removed_bom</code></a> and take appropriate action.
+<p>
+
+    <b>Encoding.</b> <code class="code">encoding</code> specifies the decoded encoding
+    scheme. If <code class="code"><span class="keywordsign">`</span><span class="constructor">UTF_16</span></code> is used the endianness is determined
+    according to the standard: from a
+    <a href="http://unicode.org/glossary/#byte_order_mark">BOM</a>
+    if there is one, <code class="code"><span class="keywordsign">`</span><span class="constructor">UTF_16BE</span></code> otherwise.
+<p>
+
+    If <code class="code">encoding</code> is unspecified it is guessed. The result of a guess
+    can only be <code class="code"><span class="keywordsign">`</span><span class="constructor">UTF_8</span></code>, <code class="code"><span class="keywordsign">`</span><span class="constructor">UTF_16BE</span></code> or <code class="code"><span class="keywordsign">`</span><span class="constructor">UTF_16LE</span></code>. The heuristic
+    looks at the first three bytes of input (or less if impossible)
+    and takes the <em>first</em> matching byte pattern in the table below.
+<pre class="codepre"><code class="code">xx&nbsp;=&nbsp;any&nbsp;byte<br>
+..&nbsp;=&nbsp;any&nbsp;byte&nbsp;<span class="keyword">or</span>&nbsp;no&nbsp;byte&nbsp;(input&nbsp;too&nbsp;small)<br>
+pp&nbsp;=&nbsp;positive&nbsp;byte&nbsp;<br>
+uu&nbsp;=&nbsp;valid&nbsp;<span class="constructor">UTF</span>-8&nbsp;first&nbsp;byte<br>
+<br>
+<span class="constructor">Bytes</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Guess</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Rationale</span><br>
+---------+-----------+-----------------------------------------------<br>
+<span class="constructor">EF</span>&nbsp;<span class="constructor">BB</span>&nbsp;<span class="constructor">BF</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_8</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">UTF</span>-8&nbsp;<span class="constructor">BOM</span><br>
+<span class="constructor">FE</span>&nbsp;<span class="constructor">FF</span>&nbsp;..&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_16BE</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">UTF</span>-16<span class="constructor">BE</span>&nbsp;<span class="constructor">BOM</span><br>
+<span class="constructor">FF</span>&nbsp;<span class="constructor">FE</span>&nbsp;..&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_16LE</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">UTF</span>-16<span class="constructor">LE</span>&nbsp;<span class="constructor">BOM</span><br>
+00&nbsp;pp&nbsp;..&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_16BE</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">ASCII</span>&nbsp;<span class="constructor">UTF</span>-16<span class="constructor">BE</span>&nbsp;<span class="keyword">and</span>&nbsp;<span class="constructor">U</span>+0000&nbsp;is&nbsp;often&nbsp;forbidden<br>
+pp&nbsp;00&nbsp;..&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_16LE</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">ASCII</span>&nbsp;<span class="constructor">UTF</span>-16<span class="constructor">LE</span>&nbsp;<span class="keyword">and</span>&nbsp;<span class="constructor">U</span>+0000&nbsp;is&nbsp;often&nbsp;forbidden<br>
+uu&nbsp;..&nbsp;..&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_8</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">ASCII</span>&nbsp;<span class="constructor">UTF</span>-8&nbsp;<span class="keyword">or</span>&nbsp;valid&nbsp;<span class="constructor">UTF</span>-8&nbsp;first&nbsp;byte.<br>
+xx&nbsp;xx&nbsp;..&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_16BE</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Not</span>&nbsp;<span class="constructor">UTF</span>-8&nbsp;=&gt;&nbsp;<span class="constructor">UTF</span>-16,&nbsp;no&nbsp;<span class="constructor">BOM</span>&nbsp;=&gt;&nbsp;<span class="constructor">UTF</span>-16<span class="constructor">BE</span><br>
+..&nbsp;..&nbsp;..&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UTF_8</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Single</span>&nbsp;malformed&nbsp;<span class="constructor">UTF</span>-8&nbsp;byte&nbsp;<span class="keyword">or</span>&nbsp;no&nbsp;input.&nbsp;<br>
+</code></pre>
+    This heuristic is compatible both with BOM based
+    recognitition and
+    <a href="http://tools.ietf.org/html/rfc4627#section-3">JSON-like encoding
+    recognition</a> that relies on ASCII being present at the beginning
+    of the stream. Also, <a href="Uutf.html#VALdecoder_removed_bom"><code class="code"><span class="constructor">Uutf</span>.decoder_removed_bom</code></a> will tell the client
+    if the guess was BOM based.
+<p>
+
+    <b>Newline normalization.</b> If <code class="code">nln</code> is specified, the given
+    newline normalization is performed, see <a href="Uutf.html#TYPEnln"><code class="code"><span class="constructor">Uutf</span>.nln</code></a>. Otherwise
+    all newlines are returned as found in the input.
+<p>
+
+    <b>Character position.</b> The line number, column number and
+    character count of the last decoded character (including
+    <code class="code"><span class="keywordsign">`</span><span class="constructor">Malformed</span></code> ones) are respectively returned by <a href="Uutf.html#VALdecoder_line"><code class="code"><span class="constructor">Uutf</span>.decoder_line</code></a>,
+    <a href="Uutf.html#VALdecoder_col"><code class="code"><span class="constructor">Uutf</span>.decoder_col</code></a> and <a href="Uutf.html#VALdecoder_count"><code class="code"><span class="constructor">Uutf</span>.decoder_count</code></a>. Before the first call to
+    <a href="Uutf.html#VALdecode"><code class="code"><span class="constructor">Uutf</span>.decode</code></a> the line number is <code class="code">1</code> and the column is <code class="code">0</code>.  Each
+    <a href="Uutf.html#VALdecode"><code class="code"><span class="constructor">Uutf</span>.decode</code></a> returning <code class="code"><span class="keywordsign">`</span><span class="constructor">Uchar</span></code> or <code class="code"><span class="keywordsign">`</span><span class="constructor">Malformed</span></code> increments the column
+    until a newline.  On a newline, the line number is incremented and
+    the column set to zero. For example the line is <code class="code">2</code> and column <code class="code">0</code>
+    after the first newline was decoded. This can be understood as if <a href="Uutf.html#VALdecode"><code class="code"><span class="constructor">Uutf</span>.decode</code></a>
+    was moving an insertion point to the right in the data.  A <em>    newline</em> is anything normalized by <code class="code"><span class="keywordsign">`</span><span class="constructor">Readline</span></code>, see <a href="Uutf.html#TYPEnln"><code class="code"><span class="constructor">Uutf</span>.nln</code></a>. 
+<p>
+
+    <code class="code"><span class="constructor">Uutf</span></code> assumes that each Unicode scalar value has a column width
+    of 1. The same assumption may not be made by the display program
+    (e.g. for <code class="code">emacs</code>' compilation mode you need to set
+    <code class="code">compilation-error-screen-columns</code> to <code class="code">nil</code>). For implementing
+    more involved column width increments yourself, look into
+    <a href="http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c"><code class="code">wcwidth</code></a> and
+    <a href="http://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries">
+    grapheme cluster boundaries</a>.<br>
+</div>
+<pre><span id="VALdecode"><span class="keyword">val</span> decode</span> : <code class="type"><a href="Uutf.html#TYPEdecoder">decoder</a> -><br>       [ `Await | `End | `Malformed of string | `Uchar of <a href="Uutf.html#TYPEuchar">uchar</a> ]</code></pre><div class="info">
+<code class="code">decode d</code> is:
+    <ul>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Await</span></code> if <code class="code">d</code> has a <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> input source and awaits 
+       for more input. The client must use <a href="Uutf.Manual.html#VALsrc"><code class="code"><span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.src</code></a> to provide it.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Uchar</span> u</code> if a Unicode scalar value <code class="code">u</code> was decoded.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code> if the end of input was reached.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Malformed</span> bytes</code> if the <code class="code">bytes</code> sequence is malformed according to 
+       the decoded encoding scheme. If you are interested in a best-effort
+       decoding you can still continue to decode after an error until the
+       decoder synchronizes again on valid bytes. It may however be a good
+       idea to signal the malformed characters by adding an <a href="Uutf.html#VALu_rep"><code class="code"><span class="constructor">Uutf</span>.u_rep</code></a>
+       character to the parsed data, see the <a href="#examples">examples</a>.</li>
+</ul>
+ 
+<p>
+
+    <b>Note.</b> Repeated invocation always eventually returns <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code>, even
+    in case of errors.<br>
+</div>
+<pre><span id="VALdecoder_encoding"><span class="keyword">val</span> decoder_encoding</span> : <code class="type"><a href="Uutf.html#TYPEdecoder">decoder</a> -> <a href="Uutf.html#TYPEdecoder_encoding">decoder_encoding</a></code></pre><div class="info">
+<code class="code">decoder_encoding d</code> is <code class="code">d</code>'s the decoded encoding scheme of <code class="code">d</code>. 
+<p>
+
+    <b>Warning.</b> If the decoder guesses the encoding or uses <code class="code"><span class="keywordsign">`</span><span class="constructor">UTF_16</span></code>, 
+    rely on this value only after the first <code class="code"><span class="keywordsign">`</span><span class="constructor">Uchar</span></code> was decoded.<br>
+</div>
+<pre><span id="VALdecoder_line"><span class="keyword">val</span> decoder_line</span> : <code class="type"><a href="Uutf.html#TYPEdecoder">decoder</a> -> int</code></pre><div class="info">
+<code class="code">decoder_line d</code> is the line number of the last
+    decoded (or malformed) character. See <a href="Uutf.html#VALdecoder"><code class="code"><span class="constructor">Uutf</span>.decoder</code></a> for details.<br>
+</div>
+<pre><span id="VALdecoder_col"><span class="keyword">val</span> decoder_col</span> : <code class="type"><a href="Uutf.html#TYPEdecoder">decoder</a> -> int</code></pre><div class="info">
+<code class="code">decoder_col d</code> is the column number of the last decoded 
+    (or malformed) character. See <a href="Uutf.html#VALdecoder"><code class="code"><span class="constructor">Uutf</span>.decoder</code></a> for details.<br>
+</div>
+<pre><span id="VALdecoder_count"><span class="keyword">val</span> decoder_count</span> : <code class="type"><a href="Uutf.html#TYPEdecoder">decoder</a> -> int</code></pre><div class="info">
+<code class="code">decoder_count d</code> is the number of characters already decoded on <code class="code">d</code>
+    (including malformed ones). See <a href="Uutf.html#VALdecoder"><code class="code"><span class="constructor">Uutf</span>.decoder</code></a> for details.<br>
+</div>
+<pre><span id="VALdecoder_removed_bom"><span class="keyword">val</span> decoder_removed_bom</span> : <code class="type"><a href="Uutf.html#TYPEdecoder">decoder</a> -> bool</code></pre><div class="info">
+<code class="code">decoder_removed_bom d</code> is <code class="code"><span class="keyword">true</span></code> iff an <em>initial</em>
+    <a href="http://unicode.org/glossary/#byte_order_mark">BOM</a> was
+    removed from the input stream. See <a href="Uutf.html#VALdecoder"><code class="code"><span class="constructor">Uutf</span>.decoder</code></a> for details.<br>
+</div>
+<pre><span id="VALdecoder_src"><span class="keyword">val</span> decoder_src</span> : <code class="type"><a href="Uutf.html#TYPEdecoder">decoder</a> -> <a href="Uutf.html#TYPEsrc">src</a></code></pre><div class="info">
+<code class="code">decoder_src d</code> is <code class="code">d</code>'s input source.<br>
+</div>
+<pre><span id="VALdecoder_nln"><span class="keyword">val</span> decoder_nln</span> : <code class="type"><a href="Uutf.html#TYPEdecoder">decoder</a> -> <a href="Uutf.html#TYPEnln">nln</a> option</code></pre><div class="info">
+<code class="code">decoder_nln d</code> returns <code class="code">d</code>'s newline normalization (if any).<br>
+</div>
+<pre><span id="VALpp_decode"><span class="keyword">val</span> pp_decode</span> : <code class="type">Format.formatter -><br>       [< `Await | `End | `Malformed of string | `Uchar of <a href="Uutf.html#TYPEuchar">uchar</a> ] -> unit</code></pre><div class="info">
+<code class="code">pp_decode ppf v</code> prints an unspecified representation of <code class="code">v</code> on
+    <code class="code">ppf</code>.<br>
+</div>
+<br>
+<h1 id="encode">Encode</h1><br>
+<pre><span id="TYPEdst"><span class="keyword">type</span> <code class="type"></code>dst</span> = <code class="type">[ `Buffer of Buffer.t | `Channel of Pervasives.out_channel | `Manual ]</code> </pre>
+<div class="info">
+The type for output destinations. With a <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> destination the client
+    must provide output storage with <a href="Uutf.Manual.html#VALdst"><code class="code"><span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.dst</code></a>.<br>
+</div>
+
+<pre><span id="TYPEencoder"><span class="keyword">type</span> <code class="type"></code>encoder</span> </pre>
+<div class="info">
+The type for Unicode encoders.<br>
+</div>
+
+<pre><span id="VALencoder"><span class="keyword">val</span> encoder</span> : <code class="type">[< <a href="Uutf.html#TYPEencoding">encoding</a> ] -> [< <a href="Uutf.html#TYPEdst">dst</a> ] -> <a href="Uutf.html#TYPEencoder">encoder</a></code></pre><div class="info">
+<code class="code">encoder encoding dst</code> is an encoder for <code class="code">encoding</code> that outputs
+    to <code class="code">dst</code>. 
+<p>
+
+    <b>Note.</b> No initial
+    <a href="http://unicode.org/glossary/#byte_order_mark">BOM</a>
+    is encoded. If needed, this duty is left to the client.<br>
+</div>
+<pre><span id="VALencode"><span class="keyword">val</span> encode</span> : <code class="type"><a href="Uutf.html#TYPEencoder">encoder</a> -><br>       [< `Await | `End | `Uchar of <a href="Uutf.html#TYPEuchar">uchar</a> ] -> [ `Ok | `Partial ]</code></pre><div class="info">
+<code class="code">encode e v</code> is :
+    <ul>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Partial</span></code> iff <code class="code">e</code> has a <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> destination and needs more output
+       storage. The client must use <a href="Uutf.Manual.html#VALdst"><code class="code"><span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.dst</code></a> to provide a new buffer
+       and then call <a href="Uutf.html#VALencode"><code class="code"><span class="constructor">Uutf</span>.encode</code></a> with <code class="code"><span class="keywordsign">`</span><span class="constructor">Await</span></code> until <code class="code"><span class="keywordsign">`</span><span class="constructor">Ok</span></code> is returned.</li>
+<li><code class="code"><span class="keywordsign">`</span><span class="constructor">Ok</span></code> when the encoder is ready to encode a new <code class="code"><span class="keywordsign">`</span><span class="constructor">Uchar</span></code> or <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code></li>
+</ul>
+
+<p>
+
+    For <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> destination, encoding <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code> always returns
+    <code class="code"><span class="keywordsign">`</span><span class="constructor">Partial</span></code>, the client should continue as usual with <code class="code"><span class="keywordsign">`</span><span class="constructor">Await</span></code>
+    until <code class="code"><span class="keywordsign">`</span><span class="constructor">Ok</span></code> is returned at which point <a href="Uutf.Manual.html#VALdst_rem"><code class="code"><span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.dst_rem</code></a> <code class="code">e</code> is
+    guaranteed to be the size of the last provided buffer (i.e. nothing
+    was written).
+<p>
+
+    <b>Warning.</b> The function assumes that <code class="code">u</code> is a Unicode
+    <a href="http://unicode.org/glossary/#unicode_scalar_value">scalar value</a>. 
+    If you are handling foreign data you can use <a href="Uutf.html#VALis_uchar"><code class="code"><span class="constructor">Uutf</span>.is_uchar</code></a> to assert that. 
+<p>
+
+    <b>Raises.</b> <code class="code"><span class="constructor">Invalid_argument</span></code> if an <code class="code"><span class="keywordsign">`</span><span class="constructor">Uchar</span></code> or <code class="code"><span class="keywordsign">`</span><span class="constructor">End</span></code> is encoded
+    after a <code class="code"><span class="keywordsign">`</span><span class="constructor">Partial</span></code> encode.<br>
+</div>
+<pre><span id="VALencoder_encoding"><span class="keyword">val</span> encoder_encoding</span> : <code class="type"><a href="Uutf.html#TYPEencoder">encoder</a> -> <a href="Uutf.html#TYPEencoding">encoding</a></code></pre><div class="info">
+<code class="code">encoder_encoding e</code> is <code class="code">e</code>'s encoding.<br>
+</div>
+<pre><span id="VALencoder_dst"><span class="keyword">val</span> encoder_dst</span> : <code class="type"><a href="Uutf.html#TYPEencoder">encoder</a> -> <a href="Uutf.html#TYPEdst">dst</a></code></pre><div class="info">
+<code class="code">encoder_dst e</code> is <code class="code">e</code>'s output destination.<br>
+</div>
+<br>
+<h1 id="manual">Manual sources and destinations.</h1><br>
+<pre><span class="keyword">module</span> <a href="Uutf.Manual.html">Manual</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Uutf.Manual.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+Manual sources and destinations.
+</div>
+<br>
+<h1 id="strbuf">String folders and Buffer encoders</h1><br>
+<pre><span class="keyword">module</span> <a href="Uutf.String.html">String</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Uutf.String.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+Fold over the characters of UTF encoded OCaml <code class="code">string</code> values.
+</div>
+<pre><span class="keyword">module</span> <a href="Uutf.Buffer.html">Buffer</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Uutf.Buffer.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+UTF encode characters in OCaml <code class="code"><span class="constructor">Buffer</span>.t</code> values.
+</div>
+<br>
+<h1 id="examples">Examples</h1> 
+<p>
+
+    <h2 id="readlines">Read lines</h2>
+<p>
+
+    The value of <code class="code">lines src</code> is the list of lines in <code class="code">src</code> as UTF-8
+    encoded OCaml strings. Line breaks are determined according to the
+    recommendation R4 for a <code class="code">readline</code> function in section 5.8 of
+    Unicode 6.1.0. If a decoding error occurs we silently replace the
+    malformed sequence by the replacement character <a href="Uutf.html#VALu_rep"><code class="code"><span class="constructor">Uutf</span>.u_rep</code></a> and continue.
+<pre class="codepre"><code class="code"><span class="keyword">let</span>&nbsp;lines&nbsp;?encoding&nbsp;(src&nbsp;:&nbsp;[<span class="keywordsign">`</span><span class="constructor">Channel</span>&nbsp;<span class="keyword">of</span>&nbsp;in_channel&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">String</span>&nbsp;<span class="keyword">of</span>&nbsp;string])&nbsp;=<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;loop&nbsp;d&nbsp;buf&nbsp;acc&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Uutf</span>.decode&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Uchar</span>&nbsp;0x000A&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;line&nbsp;=&nbsp;<span class="constructor">Buffer</span>.contents&nbsp;buf&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Buffer</span>.clear&nbsp;buf;&nbsp;loop&nbsp;d&nbsp;buf&nbsp;(line&nbsp;::&nbsp;acc)<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Uchar</span>&nbsp;u&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">Buffer</span>.add_utf_8&nbsp;buf&nbsp;u;&nbsp;loop&nbsp;d&nbsp;buf&nbsp;acc<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">List</span>.rev&nbsp;(<span class="constructor">Buffer</span>.contents&nbsp;buf&nbsp;::&nbsp;acc)&nbsp;&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Malformed</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">Buffer</span>.add_utf_8&nbsp;buf&nbsp;<span class="constructor">Uutf</span>.u_rep;&nbsp;loop&nbsp;d&nbsp;buf&nbsp;acc<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Await</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keyword">assert</span>&nbsp;<span class="keyword">false</span><br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;nln&nbsp;=&nbsp;<span class="keywordsign">`</span><span class="constructor">Readline</span>&nbsp;0x000A&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;loop&nbsp;(<span class="constructor">Uutf</span>.decoder&nbsp;~nln&nbsp;?encoding&nbsp;src)&nbsp;(<span class="constructor">Buffer</span>.create&nbsp;512)&nbsp;[]</code></pre>
+<p>
+
+  Using the <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> interface, <code class="code">lines_fd</code> does the same but on a Unix file 
+  descriptor. 
+<pre class="codepre"><code class="code"><span class="keyword">let</span>&nbsp;lines_fd&nbsp;?encoding&nbsp;(fd&nbsp;:&nbsp;<span class="constructor">Unix</span>.file_descr)&nbsp;=<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;loop&nbsp;fd&nbsp;s&nbsp;d&nbsp;buf&nbsp;acc&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Uutf</span>.decode&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Uchar</span>&nbsp;0x000A&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;line&nbsp;=&nbsp;<span class="constructor">Buffer</span>.contents&nbsp;buf&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Buffer</span>.clear&nbsp;buf;&nbsp;loop&nbsp;fd&nbsp;s&nbsp;d&nbsp;buf&nbsp;(line&nbsp;::&nbsp;acc)<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Uchar</span>&nbsp;u&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">Buffer</span>.add_utf_8&nbsp;buf&nbsp;u;&nbsp;loop&nbsp;fd&nbsp;s&nbsp;d&nbsp;buf&nbsp;acc<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">List</span>.rev&nbsp;(<span class="constructor">Buffer</span>.contents&nbsp;buf&nbsp;::&nbsp;acc)<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Malformed</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">Buffer</span>.add_utf_8&nbsp;buf&nbsp;<span class="constructor">Uutf</span>.u_rep;&nbsp;loop&nbsp;fd&nbsp;s&nbsp;d&nbsp;buf&nbsp;acc<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Await</span>&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;unix_read&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;=&nbsp;<span class="keyword">try</span>&nbsp;<span class="constructor">Unix</span>.read&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Unix</span>.<span class="constructor">Unix_error</span>&nbsp;(<span class="constructor">Unix</span>.<span class="constructor">EINTR</span>,&nbsp;_,&nbsp;_)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unix_read&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;rc&nbsp;=&nbsp;unix_read&nbsp;fd&nbsp;s&nbsp;0&nbsp;(<span class="constructor">String</span>.length&nbsp;s)&nbsp;<span class="keyword">in</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.src&nbsp;d&nbsp;s&nbsp;0&nbsp;rc;&nbsp;loop&nbsp;fd&nbsp;s&nbsp;d&nbsp;buf&nbsp;acc<br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;s&nbsp;=&nbsp;<span class="constructor">String</span>.create&nbsp;65536&nbsp;<span class="comment">(*&nbsp;UNIX_BUFFER_SIZE&nbsp;in&nbsp;4.0.0&nbsp;*)</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;nln&nbsp;=&nbsp;<span class="keywordsign">`</span><span class="constructor">Readline</span>&nbsp;0x000A&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;loop&nbsp;fd&nbsp;s&nbsp;(<span class="constructor">Uutf</span>.decoder&nbsp;~nln&nbsp;?encoding&nbsp;<span class="keywordsign">`</span><span class="constructor">Manual</span>)&nbsp;(<span class="constructor">Buffer</span>.create&nbsp;512)&nbsp;[]<br>
+</code></pre>
+<p>
+
+    <h2 id="recode">Recode</h2>
+<p>
+
+    The result of <code class="code">recode src out_encoding dst</code> has the characters of
+    <code class="code">src</code> written on <code class="code">dst</code> with encoding <code class="code">out_encoding</code>.  If a
+    decoding error occurs we silently replace the malformed sequence
+    by the replacement character <a href="Uutf.html#VALu_rep"><code class="code"><span class="constructor">Uutf</span>.u_rep</code></a> and continue.  Note that we
+    don't add an initial
+    <a href="http://unicode.org/glossary/#byte_order_mark">BOM</a> to <code class="code">dst</code>, 
+    recoding will thus loose the initial BOM <code class="code">src</code> may have. Whether
+    this is a problem or not depends on the context.
+<pre class="codepre"><code class="code"><span class="keyword">let</span>&nbsp;recode&nbsp;?nln&nbsp;?encoding&nbsp;out_encoding&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(src&nbsp;:&nbsp;[<span class="keywordsign">`</span><span class="constructor">Channel</span>&nbsp;<span class="keyword">of</span>&nbsp;in_channel&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">String</span>&nbsp;<span class="keyword">of</span>&nbsp;string])<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(dst&nbsp;:&nbsp;[<span class="keywordsign">`</span><span class="constructor">Channel</span>&nbsp;<span class="keyword">of</span>&nbsp;out_channel&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Buffer</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Buffer</span>.t])<br>
+&nbsp;&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;loop&nbsp;d&nbsp;e&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Uutf</span>.decode&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Uchar</span>&nbsp;_&nbsp;<span class="keyword">as</span>&nbsp;u&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;ignore&nbsp;(<span class="constructor">Uutf</span>.encode&nbsp;e&nbsp;u);&nbsp;loop&nbsp;d&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;ignore&nbsp;(<span class="constructor">Uutf</span>.encode&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>)<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Malformed</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;ignore&nbsp;(<span class="constructor">Uutf</span>.encode&nbsp;e&nbsp;(<span class="keywordsign">`</span><span class="constructor">Uchar</span>&nbsp;<span class="constructor">Uutf</span>.u_rep));&nbsp;loop&nbsp;d&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Await</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keyword">assert</span>&nbsp;<span class="keyword">false</span><br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;d&nbsp;=&nbsp;<span class="constructor">Uutf</span>.decoder&nbsp;?nln&nbsp;?encoding&nbsp;src&nbsp;<span class="keyword">in</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;e&nbsp;=&nbsp;<span class="constructor">Uutf</span>.encoder&nbsp;out_encoding&nbsp;dst&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;loop&nbsp;d&nbsp;e</code></pre>
+  Using the <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> interface, <code class="code">recode_fd</code> does the same but between
+  Unix file descriptors.
+<pre class="codepre"><code class="code"><span class="keyword">let</span>&nbsp;recode_fd&nbsp;?nln&nbsp;?encoding&nbsp;out_encoding&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(fdi&nbsp;:&nbsp;<span class="constructor">Unix</span>.file_descr)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(fdo&nbsp;:&nbsp;<span class="constructor">Unix</span>.file_descr)&nbsp;<br>
+&nbsp;&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;encode&nbsp;fd&nbsp;s&nbsp;e&nbsp;v&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Uutf</span>.encode&nbsp;e&nbsp;v&nbsp;<span class="keyword">with</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Ok</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;()&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Partial</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;unix_write&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;=&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;write&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;=&nbsp;<span class="keyword">try</span>&nbsp;<span class="constructor">Unix</span>.single_write&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Unix</span>.<span class="constructor">Unix_error</span>&nbsp;(<span class="constructor">Unix</span>.<span class="constructor">EINTR</span>,&nbsp;_,&nbsp;_)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;write&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;wc&nbsp;=&nbsp;write&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<span class="keyword">in</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>&nbsp;wc&nbsp;&lt;&nbsp;l&nbsp;<span class="keyword">then</span>&nbsp;unix_write&nbsp;fd&nbsp;s&nbsp;(j&nbsp;+&nbsp;wc)&nbsp;(l&nbsp;-&nbsp;wc)&nbsp;<span class="keyword">else</span>&nbsp;()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;unix_write&nbsp;fd&nbsp;s&nbsp;0&nbsp;(<span class="constructor">String</span>.length&nbsp;s&nbsp;-&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.dst_rem&nbsp;e);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.dst&nbsp;e&nbsp;s&nbsp;0&nbsp;(<span class="constructor">String</span>.length&nbsp;s);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;encode&nbsp;fd&nbsp;s&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">Await</span><br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;loop&nbsp;fdi&nbsp;fdo&nbsp;ds&nbsp;es&nbsp;d&nbsp;e&nbsp;=&nbsp;<span class="keyword">match</span>&nbsp;<span class="constructor">Uutf</span>.decode&nbsp;d&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Uchar</span>&nbsp;_&nbsp;<span class="keyword">as</span>&nbsp;u&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;encode&nbsp;fdo&nbsp;es&nbsp;e&nbsp;u;&nbsp;loop&nbsp;fdi&nbsp;fdo&nbsp;ds&nbsp;es&nbsp;d&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span>&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;encode&nbsp;fdo&nbsp;es&nbsp;e&nbsp;<span class="keywordsign">`</span><span class="constructor">End</span><br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Malformed</span>&nbsp;_&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;encode&nbsp;fdo&nbsp;es&nbsp;e&nbsp;(<span class="keywordsign">`</span><span class="constructor">Uchar</span>&nbsp;<span class="constructor">Uutf</span>.u_rep);&nbsp;loop&nbsp;fdi&nbsp;fdo&nbsp;ds&nbsp;es&nbsp;d&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Await</span>&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;<span class="keyword">rec</span>&nbsp;unix_read&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;=&nbsp;<span class="keyword">try</span>&nbsp;<span class="constructor">Unix</span>.read&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<span class="keyword">with</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Unix</span>.<span class="constructor">Unix_error</span>&nbsp;(<span class="constructor">Unix</span>.<span class="constructor">EINTR</span>,&nbsp;_,&nbsp;_)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unix_read&nbsp;fd&nbsp;s&nbsp;j&nbsp;l&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;rc&nbsp;=&nbsp;unix_read&nbsp;fdi&nbsp;ds&nbsp;0&nbsp;(<span class="constructor">String</span>.length&nbsp;ds)&nbsp;<span class="keyword">in</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.src&nbsp;d&nbsp;ds&nbsp;0&nbsp;rc;&nbsp;loop&nbsp;fdi&nbsp;fdo&nbsp;ds&nbsp;es&nbsp;d&nbsp;e&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;ds&nbsp;=&nbsp;<span class="constructor">String</span>.create&nbsp;65536&nbsp;<span class="comment">(*&nbsp;UNIX_BUFFER_SIZE&nbsp;in&nbsp;4.0.0&nbsp;*)</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;es&nbsp;=&nbsp;<span class="constructor">String</span>.create&nbsp;65536&nbsp;<span class="comment">(*&nbsp;UNIX_BUFFER_SIZE&nbsp;in&nbsp;4.0.0&nbsp;*)</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;d&nbsp;=&nbsp;<span class="constructor">Uutf</span>.decoder&nbsp;?nln&nbsp;?encoding&nbsp;<span class="keywordsign">`</span><span class="constructor">Manual</span>&nbsp;<span class="keyword">in</span>&nbsp;<br>
+&nbsp;&nbsp;<span class="keyword">let</span>&nbsp;e&nbsp;=&nbsp;<span class="constructor">Uutf</span>.encoder&nbsp;out_encoding&nbsp;<span class="keywordsign">`</span><span class="constructor">Manual</span>&nbsp;<span class="keyword">in</span><br>
+&nbsp;&nbsp;<span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.dst&nbsp;e&nbsp;es&nbsp;0&nbsp;(<span class="constructor">String</span>.length&nbsp;es);<br>
+&nbsp;&nbsp;loop&nbsp;fdi&nbsp;fdo&nbsp;ds&nbsp;es&nbsp;d&nbsp;e</code></pre><br>
+</body></html>

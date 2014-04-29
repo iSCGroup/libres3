@@ -1,0 +1,5 @@
+#!/bin/sh
+ocaml -version || { 
+    echo "Please install the OCaml compiler version 3.11.2 or later"; exit 1;
+}
+ocaml detect.ml "$@"

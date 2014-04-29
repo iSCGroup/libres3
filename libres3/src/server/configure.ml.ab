@@ -1,0 +1,3 @@
+let sysconfdir = "$(sysconfdir)";;
+let localstatedir = "$(localstatedir)";;
+let docdir = "$(docdir)";;

@@ -1,0 +1,3 @@
+#!/bin/sh
+alias s3cmd="s3cmd -c $(sysconfdir)/libres3/libres3.sample.s3cfg"
+alias s3cmd_nossl="s3cmd -c $(sysconfdir)/libres3/libres3-insecure.sample.s3cfg"

@@ -1,0 +1,54 @@
+(* OASIS_START *)
+(* DO NOT EDIT (digest: fd3f4fab6df9c93a5a6cdb9096cd0d76) *)
+
+This is the INSTALL file for the libres3 distribution.
+
+This package uses OASIS to generate its build system. See section OASIS for
+full information.
+
+Dependencies
+============
+
+In order to compile this package, you will need:
+
+* ocaml (>= 3.12.1) for all, test directio, test lwtio, test misc,
+  test server, doc api-client, doc api-server
+* findlib (>= 1.2.0)
+* netclient for library sxclient, executable net_test
+* netstring for library server, library sxclient
+* jsonm for library sxclient
+* cryptokit for library server, library sxclient, executable directio_test,
+  executable lwtio_test, executable misc_test, executable net_test
+* ssl for library sxclient
+* equeue-ssl for library sxclient
+* lwt for library sxclient.lwt
+* xmlm for library server
+* netsys for library server, executable libres3_ocsigen
+* netcgi2 for library libres3_site, executable libres3_fcgi,
+  executable server_test
+* ocsigenserver for executable libres3_ocsigen
+* oUnit for executable directio_test, executable lwtio_test,
+  executable misc_test, executable net_test, executable server_test
+
+Installing
+==========
+
+1. Uncompress the source archive and go to the root of the package
+2. Run 'ocaml setup.ml -configure'
+3. Run 'ocaml setup.ml -build'
+4. Run 'ocaml setup.ml -install'
+
+Uninstalling
+============
+
+1. Go to the root of the package
+2. Run 'ocaml setup.ml -uninstall'
+
+OASIS
+=====
+
+OASIS is a program that generates a setup.ml file using a simple '_oasis'
+configuration file. The generated setup only depends on the standard OCaml
+installation: no additional library is required.
+
+(* OASIS_STOP *)

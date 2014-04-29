@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="next" href="Uutf.String.html">
+<link rel="Up" href="Uutf.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Uutf" rel="Chapter" href="Uutf.html"><title>Uutf.Manual</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="Uutf.html" title="Uutf">Up</a>
+&nbsp;<a class="post" href="Uutf.String.html" title="Uutf.String">Next</a>
+</div>
+<h1>Module <a href="type_Uutf.Manual.html">Uutf.Manual</a></h1>
+<pre><span class="keyword">module</span> Manual: <code class="code"><span class="keyword">sig</span></code> <a href="Uutf.Manual.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+Manual sources and destinations. 
+<p>
+
+    <b>Warning.</b> Use only with <code class="code"><span class="keywordsign">`</span><span class="constructor">Manual</span></code> decoder and encoders.<br>
+</div>
+<hr width="100%">
+<pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type"><a href="Uutf.html#TYPEdecoder">Uutf.decoder</a> -> string -> int -> int -> unit</code></pre><div class="info">
+<code class="code">src d s j l</code> provides <code class="code">d</code> with <code class="code">l</code> bytes to read, starting at 
+      <code class="code">j</code> in <code class="code">s</code>. This byte range is read by calls to <a href="Uutf.html#VALdecode"><code class="code"><span class="constructor">Uutf</span>.decode</code></a> with <code class="code">d</code> 
+      until <code class="code"><span class="keywordsign">`</span><span class="constructor">Await</span></code> is returned. To signal the end of input call the function
+      with <code class="code">l = 0</code>.<br>
+</div>
+<pre><span id="VALdst"><span class="keyword">val</span> dst</span> : <code class="type"><a href="Uutf.html#TYPEencoder">Uutf.encoder</a> -> string -> int -> int -> unit</code></pre><div class="info">
+<code class="code">dst e s j l</code> provides <code class="code">e</code> with <code class="code">l</code> bytes to write, starting
+      at <code class="code">j</code> in <code class="code">s</code>. This byte range is written by calls to <a href="Uutf.html#VALencode"><code class="code"><span class="constructor">Uutf</span>.encode</code></a> with <code class="code">e</code>
+      until <code class="code"><span class="keywordsign">`</span><span class="constructor">Partial</span></code> is returned. Use <a href="Uutf.Manual.html#VALdst_rem"><code class="code"><span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.dst_rem</code></a> to know the remaining
+      number of non-written free bytes in <code class="code">s</code>.<br>
+</div>
+<pre><span id="VALdst_rem"><span class="keyword">val</span> dst_rem</span> : <code class="type"><a href="Uutf.html#TYPEencoder">Uutf.encoder</a> -> int</code></pre><div class="info">
+<code class="code">dst_rem e</code> is the remaining number of non-written, free bytes
+      in the last buffer provided with <a href="Uutf.Manual.html#VALdst"><code class="code"><span class="constructor">Uutf</span>.<span class="constructor">Manual</span>.dst</code></a>.<br>
+</div>
+</body></html>
