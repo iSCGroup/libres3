@@ -195,7 +195,6 @@ let initialize config extra_spec =
   set_default config.datadir (Filename.concat dir "datadir");
   set_default config.uploaddir (Filename.concat dir "uploaddir");
   set_default config.commandpipe (Filename.concat dir "command.pipe");
-  if !Config.daemonize then set_daemon ();
   set_disablepartialrequests true;(* we handle it ourselves *)
   set_maxuploadfilesize (Some  5368709120L);
   set_respect_pipeline ();
@@ -278,7 +277,18 @@ let run () =
         Unix.kill 0 15
       end
     );
-    Ocsigen_server.start_server ();
+    if !Config.daemonize then begin
+      Unix.chdir "/";
+      ignore (Unix.setsid ());
+      if Lwt_unix.fork () > 0 then begin
+        (* Do not run exit hooks in the parent. *)
+        Lwt_sequence.iter_node_l Lwt_sequence.remove Lwt_main.exit_hooks;
+      end else begin
+        ignore (Unix.setsid ());
+        Ocsigen_server.start_server ();
+        exit 0;
+      end
+    end;
     Printf.printf "Waiting for server to start (5s) ... %!";
     if wait_pipe !(config.commandpipe) 5. then begin
       Printf.printf "OK\n%!";

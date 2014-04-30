@@ -59,7 +59,7 @@ case "\$1" in
         umask 027
         exit_if_running "libres3" "\$pid_file"
         echo "Starting LibreS3"
-        if ! $(sbindir)/libres3_ocsigen --nofork & >>"\$LOGDIR/info.log"; then
+        if ! $(sbindir)/libres3_ocsigen >>"\$LOGDIR/info.log"; then
 #        if ! $(sbindir)/libres3_ocsigen --no-ssl >>"\$LOGDIR/info.log"; then
            echo "ERROR: Failed to start libres3. Please check the log file \$LOGDIR/info.log"
            exit 1
